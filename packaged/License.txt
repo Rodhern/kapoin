@@ -1,0 +1,86 @@
+KAPOIN
+
+Copyright (c) 2017, Robert Nielsen
+All rights reserved.
+
+
+
+License overview.
+
+You may download, install and use the Kapoin add-on package with your Kerbal Space Program games.
+
+Some of the binaries in this package are third party redistributable open source libraries and add-ons. These may be redistributed provided that the conditions of their licenses are met. For further information regarding redistribution of parts of the Kapoin add-on package consult the individual licenses listed in the "Redistribution" section of this document.
+
+
+
+Information links.
+
+The more formal license text, ordered by add-on product, is provided in the "licenses" folder.
+
+The Kapoin development thread is posted to the Kerbal Space Program Forums, http://forum.kerbalspaceprogram.com/index.php?/topic/154223-wip123-kapoin-%E2%80%93-a-career-game-mission-idea/ .
+
+The closest thing to a Kapoin homepage is the Kapoin Github repository, https://github.com/Rodhern/kapoin/ .
+
+
+
+Installation instructions.
+
+The contents of the Kapoin ZIP or RAR archive has to be extracted before KSP is able to use Kapoin. An easy way to do this, for KSP on a Steam client Windows platform, is to follow these three steps:
+
+ (1) Find the KSP GameData folder on your computer. The path may be something like "C:\Program Files\Steam\steamapps\common\Kerbal Space Program\GameData\".
+ (2) Open or extract the Kapoin ZIP or RAR archive and locate the "Rodhern" folder; it is inside the GameData folder in the archive.
+ (3) Extract or copy the "Rodhern" folder found in the ZIP or RAR archive to the KSP GameData folder on your computer.
+
+The newly added folder end up with a path like e.g. "C:\Program Files\Steam\steamapps\common\Kerbal Space Program\GameData\Rodhern\", and that is it. Feature-wise the Kapoin add-on is currently (ver. 0.0.1.1) 'empty', so you should not notice any difference when launching KSP with Kapoin installed. Please report if you notice Kapoin causing error messages.
+
+Do not forget to install other add-ons too. The Kapoin add-on does very little in itself, so in order to get the full Kapoin experience you need to install the add-ons that Kapoin depend upon. Note that even though the add-ons are listed in the "Redistribution" section below, the redistributed libraries and add-ons are not the full versions of those products. That is why you have to install the add-ons yourself (except for the F-sharp core library which is not actually a KSP add-on). In general, Kerbal Space Program add-ons play well together, so please install your other favourite add-ons alongside Kapoin; the add-ons that Kapoin depends upon make up only a small fraction of the many splendid add-ons out there.
+
+Usually you want to install the latest version of your KSP add-ons. Before updating to the latest Kapoin version, it is a good idea to delete the existing "Rodhern" folder from your KSP GameData folder. If the newest Kapoin add-on package contains fewer files than the older one, it is probably deliberate.
+
+
+
+Credits.
+
+It is customary that main library files (dlls), such as the Kapoin main module, "Kapoin.dll", the F-sharp core library, "FSharp.Core.dll", the Toolbar Plugin library, "Toolbar.dll", and so on, carry copyright notices showing the primary author. Such notices are usually not found on the simpler assets, such as ribbon and icon images (e.g. png files). Instead here is a (template) list of asset creators:
+ * Rodhern, http://forum.kerbalspaceprogram.com/index.php?/profile/144074-rodhern/ .
+
+
+
+Source code.
+
+The full source code for Kapoin as well as source code for the add-ons that Kapoin depends on can be found on Github.
+ 
+ F-Sharp Core Library (for .Net 3.5): https://github.com/Rodhern/fsharp/tree/net35/
+ 
+ Toolbar Plugin: https://github.com/blizzy78/ksp_toolbar/
+ 
+ Module Manager: https://github.com/sarbian/ModuleManager/
+ 
+ Final Frontier: https://github.com/Nereid42/FinalFrontier/
+
+Source code for the remaining libraries, "KapoinWrappers.dll", "KapoinHelpers.dll" and "Kapoin.dll", is found at https://github.com/Rodhern/kapoin/ .
+
+
+
+Redistribution.
+
+As noted above, Kapoin depends on a number of third party libraries and add-ons. Those third party products are (with the exception of the F-sharp core library) not included in the Kapoin add-on package, though they either directly or indirectly contribute source code to the Kapoin executable libraries. All of the third party libraries and add-ons are open source redistributable products, each with their own license conditions. For convenience, the license condition text is copied to text files in the "licenses" folder.
+
+In general you are not allowed to redistribute the Kapoin add-on package, nor the source code for it. Please ask before forking the Github repository (e.g. by opening a Github "issue" ticket). You may redistribute certain parts of the Kapoin add-on package though.
+
+The Kapoin wrapper library, "KapoinWrappers.dll", is used to access the third party add-ons from within Kapoin. The wrapper library (directly or indirectly) contains source code contributions from most of the below listed third party libraries and add-ons. You may redistribute the wrapper library if you comply with the conditions of all the listed libraries and add-ons, i.e. comply with all conditions from all of the license documents placed in the "licenses" folder. This fairly restrictive license choice ensures that further source code can be added to the wrapper library in future versions of Kapoin, and at the same time keep the license terms essentially unchanged.
+
+You may, subject to certain conditions specified in "LICENSE_Kapoin.txt", redistribute the Kapoin helper module, "KapoinHelpers.dll", but only in unmodified binary form.
+
+The Kapoin main module, "Kapoin.dll", and the Kapoin assets (such as icons, flags, ribbons, text documents et cetera) may not be redistributed without express permission.
+
+The licenses for the redistributable libraries and add-ons can be found in the "licenses" folder.
+ 
+ F-Sharp Core Library ("FSharp.Core.dll"): See "LICENSE_FSharp.txt".
+ 
+ Toolbar Plugin: See "LICENSE_Toolbar.txt".
+ 
+ Module Manager: See "LICENSE_ModuleManager.txt".
+ 
+ Final Frontier: See "LICENSE_FinalFrontier.txt".
+

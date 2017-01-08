@@ -1,1 +1,27 @@
 ﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kapoin_01_Wrappers", "Kapoin_01_Wrappers\Kapoin_01_Wrappers.csproj", "{4E94AB3C-7771-4224-AD0D-C92FC68B37C6}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Kapoin_02_Helpers", "Kapoin_02_Helpers\Kapoin_02_Helpers.fsproj", "{AA38C4FF-2324-4E1F-871A-C86A5BDD334E}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Kapoin_03_Main", "Kapoin_03_Main\Kapoin_03_Main.fsproj", "{F47C8B33-3DA7-404E-BF03-1CCEC0D4C84E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		ChosenConfiguration|ConfiguredPlatform (Any CPU) = ChosenConfiguration|ConfiguredPlatform (Any CPU)
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E94AB3C-7771-4224-AD0D-C92FC68B37C6}.ChosenConfiguration|ConfiguredPlatform (Any CPU).ActiveCfg = AnyCPUConfiguration|Any CPU
+		{4E94AB3C-7771-4224-AD0D-C92FC68B37C6}.ChosenConfiguration|ConfiguredPlatform (Any CPU).Build.0 = AnyCPUConfiguration|Any CPU
+		{AA38C4FF-2324-4E1F-871A-C86A5BDD334E}.ChosenConfiguration|ConfiguredPlatform (Any CPU).ActiveCfg = AnyCPUConfiguration|Any CPU
+		{AA38C4FF-2324-4E1F-871A-C86A5BDD334E}.ChosenConfiguration|ConfiguredPlatform (Any CPU).Build.0 = AnyCPUConfiguration|Any CPU
+		{F47C8B33-3DA7-404E-BF03-1CCEC0D4C84E}.ChosenConfiguration|ConfiguredPlatform (Any CPU).ActiveCfg = AnyCPUConfiguration|Any CPU
+		{F47C8B33-3DA7-404E-BF03-1CCEC0D4C84E}.ChosenConfiguration|ConfiguredPlatform (Any CPU).Build.0 = AnyCPUConfiguration|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

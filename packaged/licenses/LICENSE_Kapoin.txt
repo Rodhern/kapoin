@@ -1,0 +1,10 @@
+Copyright (c) 2017, Robert Nielsen
+All rights reserved.
+
+The Kapoin helper module, "KapoinHelpers.dll", the Kapoin main module, "Kapoin.dll", and the Kapoin assets, such as flag, ribbon and icon images, text documents et cetera, may be downloaded and used for the non-commercial leisure purpose of playing Kerbal Space Program. All copyright and license information must be retained, which automatically will be the case in a normal download and install of Kapoin.
+
+The Kapoin helper module, "KapoinHelpers.dll", may be redistributed in its unmodified binary form, provided that 1) all copyright notices are kept in place, 2) this license file is included in the distribution and 3) if the distribution contains material other than the Kapoin helper module then relevant license, readme or other distributed documentation must call attention to the Kapoin copyright and license conditions.
+
+Source code and additional license information can be found at http://github.com/Rodhern/Kapoin .
+
+The Kapoin software is provided on an "as is" basis without warranty of any kind. The user bears all risks of damage using Kapoin.
