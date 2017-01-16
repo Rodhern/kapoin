@@ -26,7 +26,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml" /><!-- note: System.Xml is implicitly referenced -->
     <Reference Include="UnityEngine">
       <HintPath>..\..\KSP_x64_Data_v123\Managed\UnityEngine.dll</HintPath>
     </Reference>

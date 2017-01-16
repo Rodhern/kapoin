@@ -1,0 +1,9 @@
+source http://nuget.org/api/v2
+
+nuget FAKE
+
+// At some point one of the newer NUnit references can be referenced indirectly (by packages.config).
+// nuget NUnit
+
+// We would like to download nuget.exe, but why can't it end up in ./packages/NuGet/ ?
+// http https://dist.nuget.org/win-x86-commandline/latest/nuget.exe NuGet/nuget.exe ./packages

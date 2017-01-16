@@ -1,4 +1,11 @@
-﻿
+﻿# Ignore these files and directories
+.paket/paket.exe
+paket.lock
+paket-files/
+packages/FAKE/
+packages/NUnit/
+
+
 # User-specific files
 *.suo
 
