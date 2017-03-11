@@ -6,6 +6,7 @@ open AssemblyInfoFile
 
 // Properties
 let version = "0.0.1.97"
+let buildProps = ("Configuration", "AnyCPUConfiguration")::[]
 let buildDir = "./output/FakeBuildDir/"
 
 
@@ -18,7 +19,9 @@ Target "CheckForDirty" (fun _ ->
    then let msg = "The VSBuild folder is not clean!"
         traceError msg
         failwith msg
-   else trace (" Kapoin version parameter: " + version + ".") )
+   else trace (" Kapoin version parameter: " + version + ".") 
+        for (k,v) in buildProps // write custom build properties in console
+         do trace (" build with /p:" + k + "=\"" + v + "\"") )
 
 // Clean build directory (note: ignores ./output/VSBuild/)
 Target "Clean" (fun _ -> CleanDir buildDir )
@@ -36,7 +39,7 @@ Target "Prepare" (fun _ ->
 // Build the main module with MSBuild
 Target "BuildMain" (fun _ ->
   !! "./Kapoin_03_Main/Kapoin_03_Main.fsproj"
-  |> MSBuildRelease buildDir "Build"
+  |> MSBuild buildDir "Build" buildProps
   |> Log "Main build output: " )
 
 // Copy the compiled DLLs to a ZIP file (note: extract to /GameData/Rodhern/Plugins/ when ready)
@@ -47,18 +50,6 @@ Target "ZipResult" (fun _ ->
   ++ (buildDir + "/KapoinHelpers.dll")
   ++ (buildDir + "/Kapoin.dll")
   |> Zip buildDir ("./output/Kapoin-DLLs-ver-" + vername + ".zip") )
-
-// Build the helper project with MSBuild (note: not in use)
-Target "BuildHelper" (fun _ ->
-  !! "./Kapoin_02_Helpers/Kapoin_02_Helpers.fsproj"
-  |> MSBuildRelease buildDir "Build"
-  |> Log "Helper build output: " )
-
-// Build the wrapper project with MSBuild (note: not in use)
-Target "BuildWrapper" (fun _ ->
-  !! "./Kapoin_01_Wrappers/Kapoin_01_Wrappers.csproj"
-  |> MSBuildRelease buildDir "Build"
-  |> Log "Wrapper build output: " )
 
 // Dependencies
 "CheckForDirty"
