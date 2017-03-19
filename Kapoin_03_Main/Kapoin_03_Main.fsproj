@@ -24,6 +24,9 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\KSP_x64_Data_v123\Managed\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\..\KSP_x64_Data_v123\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\KSP_x64_Data_v123\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>

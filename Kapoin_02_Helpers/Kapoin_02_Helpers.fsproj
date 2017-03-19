@@ -33,6 +33,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="KapoinUtilities.fs" />
+    <Compile Include="SceneAddonBase.fs" />
+    <Compile Include="KapoinCache.fs" />
+    <Compile Include="GameSettings.fs" />
+    <Compile Include="PopupSelectDialog.fs" />
+    <Compile Include="ToolbarMenu.fs" />
+    <Compile Include="LoopEventManager.fs" />
+    <Compile Include="ScenarioDataModule.fs" />
+    <Compile Include="CraftAndPartListeners.fs" />
+    <Compile Include="ContractHelper.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kapoin_01_Wrappers\Kapoin_01_Wrappers.csproj">
