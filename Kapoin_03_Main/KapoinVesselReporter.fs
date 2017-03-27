@@ -2,22 +2,18 @@
 // **  Copyright (c) 2017, Robert Nielsen. All rights reserved.  **
 // **** **** **** **** **** **** **** **** **** **** **** **** ****
 
-namespace Rodhern.Kapoin.Helpers.FlightModules
+namespace Rodhern.Kapoin.MainModule.FlightModules
   
   open System
   open System.Collections.Generic
-  open System.Reflection
-  open UnityEngine
-  open Rodhern.Kapoin.Helpers
   open Rodhern.Kapoin.Helpers.UtilityModule
-  open Rodhern.Kapoin.Helpers.UtilityClasses
-  open Rodhern.Kapoin.Helpers.ScenarioData
+  open Rodhern.Kapoin.Helpers.GameSettings
+  open Rodhern.Kapoin.Helpers.Events
+  open Rodhern.Kapoin.Helpers.FlightModules
+  open Rodhern.Kapoin.MainModule.Data
+  open Rodhern.Kapoin.MainModule.Events
   
   
-  type FilteredListenerData () =
-    inherit FilteringDataNode ()
-  
-  
-  type Listener< 'T when 'T :> MonoBehaviour > () =
+  type KapoinVesselReporter () =
     inherit System.Object () // placeholder
   

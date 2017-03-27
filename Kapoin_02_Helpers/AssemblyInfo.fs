@@ -25,7 +25,7 @@ open System.Runtime.InteropServices;
 [<assembly: Guid("f94fded9-0912-43fa-aca7-5da629568f21")>]
 
 // Version information for an assembly consists of four values:
-[<assembly: AssemblyVersion("0.0.1.1")>]
-[<assembly: AssemblyFileVersion("0.0.1.1")>]
+[<assembly: AssemblyVersion("0.0.1.2")>]
+[<assembly: AssemblyFileVersion("0.0.1.2")>]
 
 () // see https://blogs.msdn.microsoft.com/mcsuksoldev/2011/06/01/f-assembly-information-file-template/

@@ -2,12 +2,11 @@
 // **  Copyright (c) 2017, Robert Nielsen. All rights reserved.  **
 // **** **** **** **** **** **** **** **** **** **** **** **** ****
 
-namespace Rodhern.Kapoin.Helpers.GameSettings
+namespace Rodhern.Kapoin.MainModule.Cache
   
-  open System
-  open System.Reflection
+  open Rodhern.Kapoin.Helpers
   
   
-  type KapoinParameterNode () =
-    inherit System.Object () // placeholder
+  type IndexBoard () =
+    inherit KapoinCache ()
   

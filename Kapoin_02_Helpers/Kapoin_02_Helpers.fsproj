@@ -22,13 +22,13 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>..\..\KSP_x64_Data_v123\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\KSP_x64_Data_v122\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\..\KSP_x64_Data_v123\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\..\KSP_x64_Data_v122\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\KSP_x64_Data_v123\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\KSP_x64_Data_v122\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -39,6 +39,7 @@
     <Compile Include="GameSettings.fs" />
     <Compile Include="PopupSelectDialog.fs" />
     <Compile Include="ToolbarMenu.fs" />
+    <Compile Include="KeyedData.fs" />
     <Compile Include="LoopEventManager.fs" />
     <Compile Include="ScenarioDataModule.fs" />
     <Compile Include="CraftAndPartListeners.fs" />

@@ -2,25 +2,29 @@
 // **  Copyright (c) 2017, Robert Nielsen. All rights reserved.  **
 // **** **** **** **** **** **** **** **** **** **** **** **** ****
 
-namespace Rodhern.Kapoin.Helpers.Events
+namespace Rodhern.Kapoin.Helpers.ScenarioData
   
   open System
   open System.Collections.Generic
-  open UnityEngine
-  open Rodhern.Kapoin.Helpers
+  open Rodhern.Kapoin.Helpers.UtilityModule
+  open Rodhern.Kapoin.Helpers.UtilityClasses
+  
+  
+  type KeyedList<'K,'T when 'K: equality> () =
+    inherit System.Object () // placeholder
   
   
   [< AbstractClass >] // ABSTRACT ATTRIBUTE TO BE DELETED
-  type LoopMessageType =
+  type KeyedDataNode =
     inherit System.Object // placeholder
   
   
   [< AbstractClass >] // ABSTRACT ATTRIBUTE TO BE DELETED
-  type LoopTimingInformation =
+  type DataAndLoggerNode =
     inherit System.Object // placeholder
   
   
   [< AbstractClass >]
-  type LoopMonitor (?name: string) =
-    inherit SceneAddonBehaviour (defaultArg name "LoopMonitor")
+  type FilteringDataNode () =
+    inherit System.Object () // placeholder
   

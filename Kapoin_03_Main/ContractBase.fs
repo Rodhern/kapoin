@@ -2,14 +2,14 @@
 // **  Copyright (c) 2017, Robert Nielsen. All rights reserved.  **
 // **** **** **** **** **** **** **** **** **** **** **** **** ****
 
-namespace Rodhern.Kapoin.Helpers
+namespace Rodhern.Kapoin.MainModule.Contracts
   
   open System
-  open System.Collections.Generic
   open UnityEngine
+  open Rodhern.Kapoin.Helpers.Contracts
+  open Rodhern.Kapoin.MainModule.Events
   
   
-  [< AbstractClass >]
-  type SceneAddonBehaviour (name: string, ?verbose: bool) =
+  type KapoinInFlightContractLoop () =
     inherit System.Object () // placeholder
   

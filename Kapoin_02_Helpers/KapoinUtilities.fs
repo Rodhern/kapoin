@@ -10,4 +10,12 @@ namespace Rodhern.Kapoin.Helpers
   open UnityEngine
   
   
-  ()
+  module UtilityModule =
+    ()
+  
+
+namespace Rodhern.Kapoin.Helpers.UtilityClasses
+  
+  open System
+  open Rodhern.Kapoin.Helpers
+  

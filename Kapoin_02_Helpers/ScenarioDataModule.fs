@@ -10,4 +10,7 @@ namespace Rodhern.Kapoin.Helpers.ScenarioData
   open Rodhern.Kapoin.Helpers.UtilityClasses
   
   
-  ()
+  [< AbstractClass >]
+  type ScenarioDataModule =
+    inherit System.Object // placeholder
+  

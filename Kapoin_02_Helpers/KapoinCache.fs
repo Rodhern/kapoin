@@ -8,8 +8,10 @@ namespace Rodhern.Kapoin.Helpers
   open System.Collections.Generic
   open System.Reflection
   open UnityEngine
-  open UtilityModule
-  open UtilityClasses
+  open Rodhern.Kapoin.Helpers.UtilityModule
+  open Rodhern.Kapoin.Helpers.UtilityClasses
   
   
-  ()
+  type KapoinCache () =
+    inherit SceneAddonBehaviour ("KapoinCache", true)
+  

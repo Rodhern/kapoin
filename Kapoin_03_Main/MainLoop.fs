@@ -2,25 +2,22 @@
 // **  Copyright (c) 2017, Robert Nielsen. All rights reserved.  **
 // **** **** **** **** **** **** **** **** **** **** **** **** ****
 
-namespace Rodhern.Kapoin.Helpers.Events
+namespace Rodhern.Kapoin.MainModule.Events
   
   open System
   open System.Collections.Generic
-  open UnityEngine
-  open Rodhern.Kapoin.Helpers
+  open Rodhern.Kapoin.Helpers.UtilityModule
+  open Rodhern.Kapoin.Helpers.GameSettings
+  open Rodhern.Kapoin.Helpers.Events
+  open Rodhern.Kapoin.MainModule.Cache
+  open Rodhern.Kapoin.MainModule.Data
   
   
   [< AbstractClass >] // ABSTRACT ATTRIBUTE TO BE DELETED
-  type LoopMessageType =
+  type LoopState =
     inherit System.Object // placeholder
   
   
-  [< AbstractClass >] // ABSTRACT ATTRIBUTE TO BE DELETED
-  type LoopTimingInformation =
-    inherit System.Object // placeholder
-  
-  
-  [< AbstractClass >]
-  type LoopMonitor (?name: string) =
-    inherit SceneAddonBehaviour (defaultArg name "LoopMonitor")
+  type MainKapoinLoop () =
+    inherit LoopMonitor ("MainKapoinLoop")
   
