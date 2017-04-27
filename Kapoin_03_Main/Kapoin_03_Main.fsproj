@@ -38,6 +38,7 @@
     <Compile Include="MainLoop.fs" />
     <Compile Include="KapoinVesselReporter.fs" />
     <Compile Include="HeavyHelixSampleStorage.fs" />
+    <Compile Include="KapoinRibbons.fs" />
     <Compile Include="ContractBase.fs" />
   </ItemGroup>
   <ItemGroup>

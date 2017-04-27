@@ -20,10 +20,12 @@ namespace Rodhern.Kapoin.Helpers.Contracts
   type ContractState = Contract.State
   
   
-  type KapoinContractParameter () as kcpobj =
-    inherit System.Object () // placeholder
+  [< AbstractClass >] // ABSTRACT ATTRIBUTE TO BE DELETED
+  type KapoinContractParameter =
+    inherit System.Object // placeholder
   
   
-  type KapoinContract () as kcobj =
-    inherit System.Object () // placeholder
+  [< AbstractClass >] // ABSTRACT ATTRIBUTE TO BE DELETED
+  type KapoinContract =
+    inherit System.Object // placeholder
   
