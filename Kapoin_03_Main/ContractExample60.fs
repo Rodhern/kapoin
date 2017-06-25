@@ -4,12 +4,12 @@
 
 namespace Rodhern.Kapoin.MainModule.Contracts
   
-  open System
-  open UnityEngine
+  open Contracts
+  open Rodhern.Kapoin.Helpers.UtilityModule
   open Rodhern.Kapoin.Helpers.Contracts
-  open Rodhern.Kapoin.MainModule.Events
+  open Rodhern.Kapoin.MainModule.Contracts.SRCData
   
   
-  type KapoinInFlightContractLoop () =
-    inherit System.Object () // placeholder
+  // North of Sixty example
   
+  ()

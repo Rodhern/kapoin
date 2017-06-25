@@ -20,4 +20,7 @@ namespace Rodhern.Kapoin.MainModule.Events
   
   type MainKapoinLoop () =
     inherit LoopMonitor ("MainKapoinLoop")
+    
+    override monitor.Callback msg = // todo implement this override
+      ()
   

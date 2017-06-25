@@ -1,5 +1,9 @@
 ﻿# Kapoin changelog
 
+### Version 0.0.2.1
+* (work in progress)
+* Add game setting 'Track Progress'.
+
 ### Version 0.0.1.3
 * Add wrapper for Final Frontier by André Kolster (Nereid).
 

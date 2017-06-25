@@ -39,7 +39,10 @@
     <Compile Include="KapoinVesselReporter.fs" />
     <Compile Include="HeavyHelixSampleStorage.fs" />
     <Compile Include="KapoinRibbons.fs" />
-    <Compile Include="ContractBase.fs" />
+    <Compile Include="ContractLoops.fs" />
+    <Compile Include="ContractSRCData.fs" />
+    <Compile Include="ContractExample60.fs" />
+    <Compile Include="ContractExample70.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kapoin_02_Helpers\Kapoin_02_Helpers.fsproj">
