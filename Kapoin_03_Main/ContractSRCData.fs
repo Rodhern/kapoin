@@ -11,12 +11,15 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
   open Rodhern.Kapoin.Helpers.Contracts
   open Rodhern.Kapoin.MainModule.Cache
   open Rodhern.Kapoin.MainModule.Data
-  // open Rodhern.Kapoin.MainModule.Data.KeyedDataNodeExtensions
+  open Rodhern.Kapoin.MainModule.Data.KeyedDataNodeExtensions
   open Rodhern.Kapoin.MainModule.Events
   
   
-  /// Type abbreviation,
-  /// todo
+  /// A type abbreviation for System.Double.
+  /// An UTDay value is a double precision floating point value representing a
+  /// time value, either an absolute value or a relative one, expressed in
+  /// Kerbin days.
+  /// Notice: UTDay is not annotated with unit of measure.
   type UTDay = float
   
   
