@@ -10,6 +10,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts
   open UnityEngine
   open Rodhern.Kapoin.Helpers
   open Rodhern.Kapoin.Helpers.UtilityModule
+  open Rodhern.Kapoin.Helpers.UtilityClasses
   open Rodhern.Kapoin.Helpers.Contracts
   open Rodhern.Kapoin.MainModule.Events
   
@@ -65,7 +66,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts
       member I.Dispose () = I.MarkDisposed ()
   
   
-  // Add [< KSPAddon (KSPAddon.Startup.SpaceCentre, false) >] to have the scheduler run in the space center scene .
+  [< KSPAddon (KSPAddon.Startup.SpaceCentre, false) >]
   /// DESC_MISS
   type StaticRequirementCheckScheduler () =
     inherit SceneAddonBehaviour "StaticRequirementCheckScheduler"
@@ -153,6 +154,26 @@ namespace Rodhern.Kapoin.MainModule.Contracts
               |> LogWarn
         lastqueuecount:= queuecount )
     
+    /// List of all Kapoin contract classes
+    /// defined in the Kapoin main module assembly.
+    static member public AllKapoinContractClasses () =
+      /// Name of the main module, i.e. 'Kapoin', obtained by old fashion reflection.
+      let aName = (Assembly.GetAssembly(typeof<StaticRequirementCheckScheduler>).GetName()).Name
+      [ for a in AssemblyLoader.loadedAssemblies
+         do if a.name = aName then
+             for t in a.assembly.GetExportedTypes ()
+              do if t.IsSubclassOf typeof<KapoinContract> then
+                  yield t ]
+    
+    /// Use reflection to find a particular Kapoin contract class.
+    static member public FindKapoinContractClass (cname: string) =
+      StaticRequirementCheckScheduler.AllKapoinContractClasses ()
+      |> List.filter (fun ctype -> ctype.Name = cname)
+      |> function
+         | [ ctype ] -> ctype
+         | ctypes -> sprintf "Kapoin contract class '%s' not found (length of filtered list: %d)." cname ctypes.Length
+                     |> KapoinContractError.Raise
+    
     /// Find all Kapoin contract static requirement check methods,
     /// by inspecting Kapoin contract classes for SRC attributes.
     static member public FindAllSRCs () =
@@ -190,19 +211,10 @@ namespace Rodhern.Kapoin.MainModule.Contracts
         |> List.choose signaturefilter
         |> warningcheck
       
-      /// Name of the main module, i.e. 'Kapoin', obtained by old fashion reflection.
-      let aName = (Assembly.GetAssembly(typeof<StaticRequirementCheckScheduler>).GetName ()).Name
-      
-      /// List of all Kapoin contract classes defined in the Kapoin main module.
-      let cTypes = [ for a in AssemblyLoader.loadedAssemblies
-                      do if a.name = aName then
-                          for t in a.assembly.GetExportedTypes ()
-                           do if t.IsSubclassOf typeof<KapoinContract> then
-                               yield t ]
-      
       /// List the static requirement check methods found from contracts in the cTypes list.
-      let srcMethods = [| for ctype in cTypes
-                           do yield! getSRCs ctype |]
+      let srcMethods =
+        [| for ctype in StaticRequirementCheckScheduler.AllKapoinContractClasses ()
+            do yield! getSRCs ctype |]
       
       // Reorder the SRCs (with the highest numbers first).
       let comparer = { new IComparer<int * 'a> with member I.Compare ((i,_),(j,_)) = - compare i j }
@@ -239,7 +251,39 @@ namespace Rodhern.Kapoin.MainModule.Contracts
     inherit KapoinContractLoopBehaviour (typeof<KapoinInFlightContractLoop>.Name, ContractCheck.FlightCheck)
   
   
-  /// The Kapoin contract check loop running in the space center and tracking station scenes.
+  /// The Kapoin contract check loop running in the space center
+  /// and tracking station scenes.
+  /// Because of a limitation in the KSPAddon.Startup enumeration we actually
+  /// need separate loops for the space center and tracking station scenes.
   type KapoinOnGroundContractLoop () =
     inherit KapoinContractLoopBehaviour (typeof<KapoinOnGroundContractLoop>.Name, ContractCheck.GroundCheck)
+    
+    // To avoid spamming the log, we will blacklist a few talkative classes for the time being.
+    
+    /// Start or stop blacklisting of selected 'talkative' classes
+    /// in the space center and tracking station scenes.
+    /// Blacklisting can be turned on and off at any time and will last until
+    /// turned on or off again, either at a relevant scene change or manually.
+    member public loop.Blacklist (blacklist: bool) =
+      [| "StaticRequirementCheckScheduler"; "C70"; "C60" |]
+      |> Array.iter (if blacklist then LoggerBlackList.Add else LoggerBlackList.Remove)
+      loop.LogFn <| (if blacklist then "Enable" else "Disable") + " ground scene log blacklisting."
+    
+    member public loop.OnEnable () =
+      base.OnEnable ()
+      loop.Blacklist true
+    
+    member public loop.OnDisable () =
+      base.OnDisable ()
+      loop.Blacklist false
+  
+  
+  [< KSPAddon (KSPAddon.Startup.Flight, false) >]
+  type KapoinFlightSceneContractLoop () = inherit KapoinInFlightContractLoop ()
+  
+  [< KSPAddon (KSPAddon.Startup.SpaceCentre, false) >]
+  type KapoinSpaceCentreContractLoop () = inherit KapoinOnGroundContractLoop ()
+  
+  [< KSPAddon (KSPAddon.Startup.TrackingStation, false) >]
+  type KapoinTrackingStationContractLoop () = inherit KapoinOnGroundContractLoop ()
   

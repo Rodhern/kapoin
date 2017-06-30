@@ -139,10 +139,10 @@ namespace Rodhern.Kapoin.MainModule.Events
       | Scene msgtype
         -> ()//do monitor.LogFn <| sprintf "Callback, Scene, %s." (msgtype.GetType().ToString())
       | Tick MainLoop
-        -> do monitor.LogFn <| sprintf "Callback, Tick (UT= %.0f)." (Planetarium.GetUniversalTime ())
+        -> ()//do monitor.LogFn <| sprintf "Callback, Tick (UT= %.0f)." (Planetarium.GetUniversalTime ())
            maintickevent.Trigger [| monitor; new EventArgs () |] // TODO - note this line of code here in the middle of the 'debug (post)' section
       | Tick msgtype
-        -> do monitor.LogFn <| sprintf "Callback, Tick (UT= %.0f)." (Planetarium.GetUniversalTime ())
+        -> ()//do monitor.LogFn <| sprintf "Callback, Tick (UT= %.0f)." (Planetarium.GetUniversalTime ())
       // --
     
     /// Helper method for .UpdateState method below.

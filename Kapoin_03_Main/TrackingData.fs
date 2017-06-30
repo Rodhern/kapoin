@@ -186,8 +186,11 @@ namespace Rodhern.Kapoin.MainModule.Data
       if cnode.HasData
        then LogWarn "Data already present in destination node."
       if mainnode.KeyedData.IsEmpty
-       then LogWarn "No data present in data module."
-       else do mainnode.KeyedData.SaveKeyedData cnode
+       then // Even though it is a bad omen when the keyed data is empty at
+            // save time, it seems to happen regularly when the flight scene
+            // is loading. So let us skip 'LogWarn' in favour of 'LogFn'.
+            mainnode.LogFn "No data present in data module."
+       else mainnode.KeyedData.SaveKeyedData cnode
     
     interface IKeyedData with
       member data.KeyedData = data.KeyedData
@@ -264,4 +267,17 @@ namespace Rodhern.Kapoin.MainModule.Data
         | [ strvalue ] -> Some strvalue
         | _ -> sprintf "Failed to locate distinct value property named '%s'." name
                |> KapoinPersistenceError.Raise
+      
+      /// Look up distinct value property of a keyed data node and parse it
+      /// with a 'tryParse' function.
+      member public node.LookUpAndParse (name: string) (tryParse: string -> 'a option) =
+        match KeyedDataNode.TryGetValue name (Some node) with
+        | None -> sprintf "Field '%s' missing." name
+                  |> KapoinPersistenceError.Raise
+        | Some value -> value
+        |> tryParse
+        |> function
+           | None -> sprintf "Failed parsing field '%s'." name
+                     |> KapoinPersistenceError.Raise
+           | Some value -> value
   

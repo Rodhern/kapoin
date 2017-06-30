@@ -65,8 +65,9 @@ namespace Rodhern.Kapoin.Helpers.ScenarioData
       base.OnSave node
       datamodule.LogFn <| sprintf "OnSave (destination node named '%s')." node.name
       if datamodule.KeyedData.IsEmpty
-       then LogWarn "No data present in data module." // it is a bad omen if data is empty at save time
-       else do datamodule.KeyedData.TrimAndSaveKeyedData node
+       then // it is a bad omen if keyed data is empty at save time
+            LogWarn "No data present in scenario data module."
+       else datamodule.KeyedData.TrimAndSaveKeyedData node
     
     /// No particular actions are taken to enable or disable a scenario data
     /// module.
