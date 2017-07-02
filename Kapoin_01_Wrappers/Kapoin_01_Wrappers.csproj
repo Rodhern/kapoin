@@ -28,10 +28,10 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" /><!-- note: System.Xml is implicitly referenced -->
     <Reference Include="UnityEngine">
-      <HintPath>..\..\KSP_x64_Data_v122\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\KSP_x64_Data_v130\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\KSP_x64_Data_v122\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\KSP_x64_Data_v130\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -142,9 +142,9 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
   
   /// Static requirement check result node with information about
   /// the time window of an offered contract.
-  /// Note: The 'SRCTimeStampRec' and 'ContractOfferWindowNode' records are
-  ///  not all that helpful; they are here to get some data into the sfs file,
-  ///  so that we may better discover if the ideas work or not.
+  /// Remark: The 'SRCTimeStampRec' and 'ContractOfferWindowNode' records are
+  ///  not all that helpful; they are here to get data into the sfs file, so
+  ///  that we may better discover how well the ideas work.
   type ContractOfferWindowNode =
     /// Serves the same purpose as None, but with a different name.
     | NoNode
@@ -329,9 +329,14 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
   
   
   /// Static requirement check time stamp for SRCs triggered in the main loop.
-  /// Note: The 'SRCTimeStampRec' and 'ContractOfferWindowNode' classes are
-  ///       not all that helpful; they are here to get some data into the sfs
-  ///       file, so that we may better discover if the ideas work or not.
+  /// Remark: The time stamp records are, at least at the moment, direct
+  ///  subnodes of the scenario CONTRACT_SRC_DATA node. Either we find a
+  ///  different spot for 'local variable' contract data, or possibly we could
+  ///  do better if we expand the space center tracking data time stamp record
+  ///  functionality with more generic data access support.
+  ///  However, also remember that some 'local variable' contract data may just
+  ///  have to reside in the Kapoin main data node, if, for instance, the data
+  ///  is needed in other game scenes.
   type SRCTimeStampRec =
     { /// DESC_MISS
       Status: string; // not used per se
@@ -416,9 +421,9 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
     /// Create the space center tracking data time stamp.
     /// If the time stamp node already exists then do nothing.
     /// The default values used are to set the previous check time to 'now'
-    /// and the delta value to one day.
+    /// and the next check time 0.001 days (approx. 22 secs.) in the future.
     static member public CreateTimeStampNode (ctype: Type) =
-      let timestamp = SRCTimeStampRec.New { delta= 1. }
+      let timestamp = SRCTimeStampRec.New { delta= 0.001 }
       timestamp.UpdateTimeStampNode ctype
     
     /// TODO - see ContractOfferWindowNode
@@ -451,7 +456,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
     /// write SRC results to the Kapoin main data node. The SRC method provide
     /// an SRC action to this function, the action is then triggered, but only
     /// if the SRC is due according to the space center tracking data time
-    /// stamp for the given contract class (generic parameter 'C).
+    /// stamp for the given contract class.
     /// Note that the first space center tracking data time stamp cannot be
     /// created by the SRC action itself.
     static member public WriteResult (ctype: Type) (checkaction: SRCheckAction) =

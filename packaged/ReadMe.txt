@@ -1,4 +1,4 @@
-KAPOIN, http://forum.kerbalspaceprogram.com/index.php?/topic/154223-wip122-kapoin-%E2%80%93-a-career-game-mission-idea/ .
+KAPOIN, http://forum.kerbalspaceprogram.com/index.php?/topic/154223-wip130-kapoin-%E2%80%93-a-career-game-mission-idea/ .
 
 Kapoin is in pre-alpha. I am still figuring out how to write a KSP add-on, that is more than just a snippet, and figuring out how to tag and upload releases to Github and/or Spacedock.
 

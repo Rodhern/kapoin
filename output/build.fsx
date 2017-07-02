@@ -5,7 +5,7 @@ open FileUtils
 open AssemblyInfoFile
 
 // Properties
-let version = "0.0.2.97"
+let version = "0.1.0.97"
 let buildProps = ("Configuration", "AnyCPUConfiguration")::[]
 let buildDir = "./output/FakeBuildDir/"
 

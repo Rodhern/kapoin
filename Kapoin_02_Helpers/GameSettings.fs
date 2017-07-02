@@ -16,6 +16,9 @@ namespace Rodhern.Kapoin.Helpers.GameSettings
     /// The title that will appear at the top of the Kapoin settings column.
     override node.Title with get () = "Common Kapoin Options"
     
+    /// Mandatory localisation field introduced in KSP 1.3.0.
+    override node.DisplaySection with get () = node.Section
+    
     /// Defines the (public) tab name for the Kapoin settings.
     override node.Section with get () = "Kapoin"
     
