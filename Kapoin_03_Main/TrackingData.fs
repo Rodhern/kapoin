@@ -27,7 +27,7 @@ namespace Rodhern.Kapoin.MainModule.Data
     [< Literal >]
     let public DataverDisabled = "off" // a curiosity of the F# language requires a variable name beginning with a capital letter in order to use the literal in pattern matching
     
-    let public CurrentDataver: VersionTuple = 0,0,2,1
+    let public CurrentDataver: VersionTuple = 0,1,0,2
   
   
   open Constants
@@ -62,7 +62,7 @@ namespace Rodhern.Kapoin.MainModule.Data
                     data.LogFn <| sprintf "Data format stamp present and up to date."
                    else
                     data.LogFn <| sprintf "Update data format from ver. %s to %s." (ver2str ver) (ver2str CurrentDataver)
-                    data.LogFn "TODO: Data format update not yet implemented."
+                    LogWarn "TODO: Data format update not yet implemented."
        else
         let dataver = ver2str CurrentDataver
         data.LogFn <| sprintf "Create new key (%s = %s)." DataverKey dataver

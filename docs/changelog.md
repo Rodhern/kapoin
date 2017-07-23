@@ -1,5 +1,9 @@
 ﻿# Kapoin changelog
 
+### Version 0.1.0.2
+* Revise format of SRC node data in persistence file.
+* Add wrapper for Scrap Yard by Michael Marvin (magico13).
+
 ### Version 0.1.0.1
 * Compile for KSP ver. 1.3.0.
 

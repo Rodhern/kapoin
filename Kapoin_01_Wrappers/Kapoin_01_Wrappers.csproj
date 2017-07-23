@@ -30,6 +30,9 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\KSP_x64_Data_v130\Managed\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\..\KSP_x64_Data_v130\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\KSP_x64_Data_v130\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
@@ -38,6 +41,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ToolbarWrapper.cs" />
     <Compile Include="FinalFrontierAdapter.cs" />
+    <Compile Include="ScrapYardWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

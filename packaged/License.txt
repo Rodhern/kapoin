@@ -61,6 +61,8 @@ The full source code for Kapoin as well as source code for the add-ons that Kapo
  Module Manager: https://github.com/sarbian/ModuleManager/
  
  Final Frontier: https://github.com/Nereid42/FinalFrontier/
+ 
+ Scrap Yard: https://github.com/magico13/ScrapYard/
 
 Source code for the remaining libraries, "KapoinWrappers.dll", "KapoinHelpers.dll" and "Kapoin.dll", is found at https://github.com/Rodhern/kapoin/ .
 
@@ -87,4 +89,6 @@ The licenses for the redistributable libraries and add-ons can be found in the "
  Module Manager: See "LICENSE_ModuleManager.txt".
  
  Final Frontier: See "LICENSE_FinalFrontier.txt".
+ 
+ Scrap Yard: See "LICENSE_ScrapYard.txt".
 

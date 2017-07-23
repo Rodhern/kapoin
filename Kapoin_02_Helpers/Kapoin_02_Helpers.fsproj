@@ -44,6 +44,7 @@
     <Compile Include="ScenarioDataModule.fs" />
     <Compile Include="CraftAndPartListeners.fs" />
     <Compile Include="FFAdapterHelper.fs" />
+    <Compile Include="ScrapYardHelper.fs" />
     <Compile Include="ContractHelper.fs" />
   </ItemGroup>
   <ItemGroup>

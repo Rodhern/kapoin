@@ -71,8 +71,21 @@ namespace Rodhern.Kapoin.Helpers.FlightModules
       | None -> data.KeyedData.TrimAndSaveKeyedData cnode // note that the data is effectively filtered a second time at this point
   
   
-  /// DESC_MISS
-  type Listener< 'T when 'T :> MonoBehaviour > () =
+  /// An interface that allows a parent part or vessel module to expose the
+  /// filtered data and trace logger components of its listener object.
+  type IFilteredListenerData =
+    /// Unique logging identifier.
+    abstract member Uid: Guid with get
+    /// Access to filtered data.
+    abstract member FilteredData: KeyedDataNode
+    /// Log method for trace listeners and KSP log file.
+    abstract member LogFn: (string -> unit)
+  
+  
+  /// The listener object is a relative to the keyed data and logger node.
+  /// Listener objects are owned by part modules (PartModule descendants) and
+  /// vessel modules (VesselModule descendants).
+  type Listener< 'T when 'T :> MonoBehaviour and 'T :> IFilteredListenerData > () =
     
     /// Data and trace logger for listener's parent module.
     let data = new FilteredListenerData ()

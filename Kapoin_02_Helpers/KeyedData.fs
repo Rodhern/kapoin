@@ -233,7 +233,6 @@ namespace Rodhern.Kapoin.Helpers.ScenarioData
     
     /// Clear the keyed data. All existing keyed data is discarded.
     member public data.Clear () =
-      data.LogFn "Clear keyed data." // temporary debug message; this code line to be removed later
       data.KeyedData <- KeyedDataNode.EmptyNode
     
     /// To be used in container's OnLoad .

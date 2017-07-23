@@ -28,14 +28,17 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
     /// Node for contract related persisted space center tracking data.
     let [< Literal >] public TrackNodeName = "CONTRACT_SRC_DATA"
     
-    let [< Literal >] public TrackStatus = "state"
-    let [< Literal >] public TrackPrevCheck = "daychecked"
-    let [< Literal >] public TrackNextCheck = "nextcheckdue"
+    let [< Literal >] public TimeStampNodeName = "CHECK_SCHEDULE"
+    let [< Literal >] public TimeStampStatus = "state"
+    let [< Literal >] public TimeStampPrevCheck = "daychecked"
+    let [< Literal >] public TimeStampNextCheck = "nextcheckdue"
+    let [< Literal >] public TimeStampDefaultState = "N/A" // todo consider an enumeration value
     
     /// Node for static requirement check results
     /// in the form of earliest (open) contract offer windows.
-    let [< Literal >] public COWNodeName = "CONTRACT_REQUIREMENTS"
+    let [< Literal >] public StaticContractDataNodeName = "CONTRACT_REQUIREMENTS"
     
+    let [< Literal >] public COWNodeName = "OFFER_SCHEDULE"
     let [< Literal >] public COWStateHibernate = "hibernate"
     let [< Literal >] public COWStateSchedule = "schedule"
     let [< Literal >] public COWStatus = "state"
@@ -72,16 +75,16 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       |> List.filter (fun c -> c.GetType () = ctype)
       |> List.length
     
-    /// Quote a list of items, invoking ToString on each.
-    static member public QuotedList (items: 'a list) =
-      let format = function
-        | null -> "null" // special rule for null values
-        | o -> o.ToString ()
-      let rec tostring = function
-      | [], txt -> txt
-      | s::ss, "" -> tostring (ss, sprintf "'%s'" (format s))
-      | s::ss, txt -> tostring (ss, sprintf "%s, '%s'" txt (format s))
-      tostring (items, "")
+//    /// Quote a list of items, invoking ToString on each.
+//    static member public QuotedList (items: 'a list) =
+//      let format = function
+//        | null -> "null" // special rule for null values
+//        | o -> o.ToString ()
+//      let rec tostring = function
+//      | [], txt -> txt
+//      | s::ss, "" -> tostring (ss, sprintf "'%s'" (format s))
+//      | s::ss, txt -> tostring (ss, sprintf "%s, '%s'" txt (format s))
+//      tostring (items, "")
   
   
   open Constants
@@ -180,10 +183,11 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
     /// from the default cached data module ('KapoinMainNode').
     /// The contract type parameter is used to find the proper subnode.
     static member public GetContractData (ctype: Type) =
-      let subnodename = SRCUtilClass.CTypeName ctype
+      let csubnodename = SRCUtilClass.CTypeName ctype
       KeyedDataNode.TryGetTopnode<KapoinMainNode> ()
+      |> KeyedDataNode.TryGetSubnode StaticContractDataNodeName
+      |> KeyedDataNode.TryGetSubnode csubnodename
       |> KeyedDataNode.TryGetSubnode COWNodeName
-      |> KeyedDataNode.TryGetSubnode subnodename
       |> ContractOfferWindowNode.Parse
     
     /// Update, or create, a node with the record values 
@@ -191,30 +195,25 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
     /// The contract type parameter is used to name the subnode.
     /// In the NoNode case the mentioned node is deleted rather than created.
     member public cownode.SaveContractData (ctype: Type) =
-      let topnode = KeyedDataNode.TryGetTopnode<KapoinMainNode> ()
-      if topnode.IsNone then false else
-      let srcnode = topnode.Value.GetOrCreateSubNode COWNodeName
+      let topnodeopt = KeyedDataNode.TryGetTopnode<KapoinMainNode> ()
+      if topnodeopt.IsNone then false else
+      let srcnode = topnodeopt.Value.GetOrCreateSubNode StaticContractDataNodeName
       let cnodename = SRCUtilClass.CTypeName ctype
       match cownode with
       | Hibernate _
       | Schedule _
-        -> srcnode.GetOrCreateSubNode cnodename
-           |> cownode.UpdateNode
+        -> let csubnode = srcnode.GetOrCreateSubNode cnodename
+           let recnode = csubnode.GetOrCreateSubNode COWNodeName
+           do cownode.UpdateNode recnode
            true
       | NoNode ->
-        if srcnode.nodes.ContainsKey cnodename
-         then // debug begin
-              let debugstr =
-                srcnode.nodes.[cnodename] // there should be exactly one node
-                |> List.map (fun datanode -> datanode.GetOrCreateValue COWStatus)
-                |> SRCUtilClass.QuotedList
-              sprintf "ContractOfferWindowNode for '%s':" cnodename
-              + sprintf " Removing existing COW node (previous state(s)= %s)." debugstr
-              |> LogLine
-              // debug end
-              srcnode.nodes.Remove cnodename |> ignore
-              true
-         else false
+        match Some srcnode |> KeyedDataNode.TryGetSubnode cnodename with
+        | None -> false
+        | Some csubnode ->
+          do csubnode.nodes.Remove COWNodeName |> ignore // delete COW record(s)
+          if csubnode.IsEmpty
+           then srcnode.nodes.Remove cnodename |> ignore // if csubnode is empty then delete that as well
+          true
     
     /// Method to downgrade COW node from Schedule to Hibernate
     /// if the contract offer count is already reached.
@@ -344,7 +343,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       PrevCheck: UTDay;
       /// DESC_MISS
       NextCheck: UTDay } with
-      
+    
     /// Create a SRCTimeStampRec using the current time (UT) to mark
     /// PrevCheck and set NextCheck in the future, by the amount specified
     /// in intervalparam.
@@ -353,16 +352,17 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
        then ()
        else invalidArg "intervalparam" "SRC interval parameter must be positive."
       let now = SRCUtilClass.Day
-      { Status= "N/A"; PrevCheck= now; NextCheck= now + intervalparam.delta }
+      { Status= TimeStampDefaultState; PrevCheck= now; NextCheck= now + intervalparam.delta }
     
-    /// TODO - see ContractOfferWindowNode
+    /// Try to fetch the value of each of the record fields from a keyed data
+    /// node. If the values, or the node, do not exist the result is None.
     static member public TryParse (nodeopt: KeyedDataNode option) =
       let flatten = function | None -> None | Some x -> x
       let lookup = fun s -> KeyedDataNode.TryGetValue s nodeopt
-      let statusopt = lookup TrackStatus
-      let prevcheckopt = lookup TrackPrevCheck
+      let statusopt = lookup TimeStampStatus
+      let prevcheckopt = lookup TimeStampPrevCheck
                          |> Option.map str2float |> flatten
-      let nextcheckopt = lookup TrackNextCheck
+      let nextcheckopt = lookup TimeStampNextCheck
                          |> Option.map str2float |> flatten
       match statusopt, prevcheckopt, nextcheckopt with
       | None, None, None ->
@@ -372,46 +372,55 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       | _ ->
         let optX (opt: 'a option) = if opt.IsSome then "X" else "-"
         "Some but not all SRCTimeStampRec fields are present in keyed data node;"
-        + sprintf " (%s %s; %s %s; %s %s)." TrackStatus (optX statusopt)
-                  TrackPrevCheck (optX prevcheckopt) TrackNextCheck (optX nextcheckopt)
+         + sprintf " (%s %s; %s %s; %s %s)."
+                   TimeStampStatus (optX statusopt)
+                   TimeStampPrevCheck (optX prevcheckopt)
+                   TimeStampNextCheck (optX nextcheckopt)
         |> LogError
         None
     
-    /// TODO - see ContractOfferWindowNode
+    /// Write the record field values to a keyed data node.
     member public record.UpdateNode (node: KeyedDataNode) =
       // verify that none of the attributes are duplicates
-      node.GetOrCreateValue TrackStatus |> ignore
-      node.GetOrCreateValue TrackPrevCheck |> ignore
-      node.GetOrCreateValue TrackNextCheck|> ignore
+      node.GetOrCreateValue TimeStampStatus |> ignore
+      node.GetOrCreateValue TimeStampPrevCheck |> ignore
+      node.GetOrCreateValue TimeStampNextCheck|> ignore
       // then fill in each of the three fields
-      node.values.[TrackStatus] <- [ record.Status ]
-      node.values.[TrackPrevCheck] <- [ float2str record.PrevCheck ]
-      node.values.[TrackNextCheck] <- [ float2str record.NextCheck ]
+      node.values.[TimeStampStatus] <- [ record.Status ]
+      node.values.[TimeStampPrevCheck] <- [ float2str record.PrevCheck ]
+      node.values.[TimeStampNextCheck] <- [ float2str record.NextCheck ]
     
-    /// TODO - see ContractOfferWindowNode
+    /// Access the default cached data module (KapoinMainNode)
+    /// and try to fetch the record field values.
+    /// The contract type parameter is used to find the proper subnode.
     static member public TryGetContractData (ctype: Type) =
-      let subnodename = SRCUtilClass.CTypeName ctype
+      let csubnodename = SRCUtilClass.CTypeName ctype
       KeyedDataNode.TryGetTopnode<KapoinSpaceCenterTrackingData> ()
       |> KeyedDataNode.TryGetSubnode TrackNodeName
-      |> KeyedDataNode.TryGetSubnode subnodename
+      |> KeyedDataNode.TryGetSubnode csubnodename
+      |> KeyedDataNode.TryGetSubnode TimeStampNodeName
       |> SRCTimeStampRec.TryParse
     
-    /// TODO - see ContractOfferWindowNode
+    /// Access the default cached data module (KapoinMainNode)
+    /// and create or update the time stamp record field values.
+    /// The contract type parameter is used to find the proper subnode.
     member public record.SaveContractData (ctype: Type) =
-      let subnodename = SRCUtilClass.CTypeName ctype
-      let topnode = KeyedDataNode.TryGetTopnode<KapoinSpaceCenterTrackingData> ()
-      if topnode.IsNone then false else
-      do let tracknode = topnode.Value.GetOrCreateSubNode TrackNodeName
-         let cnode = tracknode.GetOrCreateSubNode subnodename
-         record.UpdateNode cnode
-      true
+      match KeyedDataNode.TryGetTopnode<KapoinSpaceCenterTrackingData> () with
+      | None -> false
+      | Some topnode
+        -> let csubnodename = SRCUtilClass.CTypeName ctype
+           let tracknode = topnode.GetOrCreateSubNode TrackNodeName
+           let cnode = tracknode.GetOrCreateSubNode csubnodename
+           let timestampnode = cnode.GetOrCreateSubNode TimeStampNodeName
+           do record.UpdateNode timestampnode
+           true
     
     /// Create or update the space center tracking data time stamp for the
     /// given custom contract class, e.g. to create an initial time stamp.
     /// Note: Unless 'overwrite' is true (the default is false) this function
-    /// will not update an existing time stamp.
+    ///  will not update an existing time stamp.
     /// Note: This function will only work while the Kapoin Space Center
-    /// tracking data (KapoinSpaceCenterTrackingData) is registered in cache.
+    ///  tracking data (KapoinSpaceCenterTrackingData) is registered in cache.
     member public timestamp.UpdateTimeStampNode (ctype: Type, ?overwrite: bool) =
       if (defaultArg overwrite false) ||
          (SRCTimeStampRec.TryGetContractData ctype).IsNone
@@ -426,13 +435,21 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       let timestamp = SRCTimeStampRec.New { delta= 0.001 }
       timestamp.UpdateTimeStampNode ctype
     
-    /// TODO - see ContractOfferWindowNode
+    /// Access the default cached data module (KapoinMainNode)
+    /// and delete existing time stamp node(s) for the given contract type.
+    /// The contract type parameter is used to find the proper subnode.
     static member public DeleteTimeStampNode (ctype: Type) =
-      let topnode = KeyedDataNode.TryGetTopnode<KapoinSpaceCenterTrackingData> ()
-      if topnode.IsNone then false else
-      let tracknode = topnode.Value.GetOrCreateSubNode TrackNodeName
+      let topnodeopt = KeyedDataNode.TryGetTopnode<KapoinSpaceCenterTrackingData> ()
+      if topnodeopt.IsNone then false else
+      let tracknode = topnodeopt.Value.GetOrCreateSubNode TrackNodeName
       let cnodename = SRCUtilClass.CTypeName ctype
-      tracknode.nodes.Remove cnodename
+      if not (tracknode.nodes.ContainsKey cnodename) then false else
+      let cnode = tracknode.GetOrCreateSubNode cnodename
+      if not (cnode.nodes.ContainsKey TimeStampNodeName) then false else
+      do cnode.nodes.Remove TimeStampNodeName |> ignore // delete timestamp subnode(s)
+      if cnode.IsEmpty
+       then tracknode.nodes.Remove cnodename |> ignore // if cnode is empty then delete that as well
+      true
   
   
   type SRCheckResult with // extend SRCheckResult with static WriteResult method
