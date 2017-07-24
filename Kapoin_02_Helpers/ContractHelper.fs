@@ -297,7 +297,7 @@ namespace Rodhern.Kapoin.Helpers.Contracts
                    | :? KapoinContract as kc -> yield kc
                    | _ -> () ]
              |> List.filter statefilter
-      | _ -> LogError "Contract system instance not available."; [] // TODO - This error can occur in KSP 1.3.0 just after a scene change !
+      | _ -> LogError "Contract system instance not available."; []
     
     /// Check if the generated contract have siblings already in play
     /// whether offered, active, completed, failed or cancelled.

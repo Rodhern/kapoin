@@ -45,6 +45,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
     let [< Literal >] public COWFirstDay = "firstday"
     let [< Literal >] public COWLastDay = "lastday"
     let [< Literal >] public COWMaxOffered = "maxcount"
+    let [< Literal >] public COWCachedCount = "cachedcount"
   
   
   [< AbstractClass >]
@@ -61,6 +62,25 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
          then KapoinContractError.Raise "Unable to access 'CurrentGame'."
          else HighLogic.CurrentGame.UniversalTime / 21600.  + 1. // the game starts "day 1 time 0:00"
     
+    /// The same as float2str, but with the result rounded to 6 decimals.
+    static member Float2Str6 (v: float) =
+      Math.Round (v, 6) |> float2str
+    
+    /// Write two integer pair value as a string.
+    static member Pair2Str ((a,b): int * int) =
+      sprintf "%0d / %0d" a b
+    
+    /// Read two integer values separated by a slash.
+    static member Str2Pair (value: string): (int * int) option =
+      if String.IsNullOrEmpty value
+       then None else
+      match value.Split [|'/'|]
+            |> Array.map (fun s -> s.Trim ())
+            |> Array.map str2int
+       with
+       | [| Some a; Some b |] -> Some (a, b)
+       | _ -> None
+    
     /// Check if ctype is a KapoinContract type, and return the name.
     static member public CTypeName (ctype: Type) =
       if ctype.IsSubclassOf typeof<KapoinContract>
@@ -70,10 +90,16 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
             |> KapoinContractError.Raise
     
     /// Count the number of contracts of the given type in the given states.
+    /// Remark: Beacause we occasionally (awkwardly often actually) need to
+    ///  get the contract count when the KSP contract system is not ready the
+    ///  result takes the form of an option value.
     static member public ContractCount (ctype: Type, states: ContractState array) =
-      KapoinContract.ListKapoinContracts states
-      |> List.filter (fun c -> c.GetType () = ctype)
-      |> List.length
+      if not (assigned Contracts.ContractSystem.Instance)
+       then None
+       else KapoinContract.ListKapoinContracts states
+            |> List.filter (fun c -> c.GetType () = ctype)
+            |> List.length
+            |> Option.Some
     
 //    /// Quote a list of items, invoking ToString on each.
 //    static member public QuotedList (items: 'a list) =
@@ -107,7 +133,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       node.GetOrCreateValue COWStatus |> ignore
       node.values.[COWStatus] <- [ COWStateHibernate ]
       node.GetOrCreateValue COWLastDay |> ignore
-      node.values.[COWLastDay] <- [ float2str record.LastDay ]
+      node.values.[COWLastDay] <- [ record.LastDay |> SRCUtilClass.Float2Str6 ]
   
   
   /// Record part for the Schedule option of a ContractOfferWindowNode.
@@ -117,17 +143,34 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       /// DESC_MISS
       LastDay: UTDay
       /// DESC_MISS
-      MaxOffered: int } with
+      MaxOffered: int
+      /// Cache the offered contract count.
+      /// It turns out that the contract requirements are often checked
+      /// even at times when the KSP contract system is not ready
+      /// (i.e. when Contracts.ContractSystem.Instance is null).
+      /// The first int of the pair is the last known number of offered (and
+      /// active) contracts of its type, the second int of the pair is the
+      /// number of times the cached value has been 'queried'. The assumption
+      /// is that as long as the sum of the two ints is less than 'MaxOffered'
+      /// the contract count limit is not yet reached.
+      CachedCount: (int * int) option } with
     
     /// TODO
     static member public Parse (node: KeyedDataNode) =
       let firstday = node.LookUpAndParse COWFirstDay str2float
       let lastday = node.LookUpAndParse COWLastDay str2float
       let maxoffered = node.LookUpAndParse COWMaxOffered str2int
+      let cachedcount = KeyedDataNode.TryGetValue COWCachedCount (Some node)
+                        |> Option.bind SRCUtilClass.Str2Pair
       if (firstday < 0.) || not (firstday < lastday) || (maxoffered < 1)
        then sprintf "Invalid schedule parameters, firstday= %f,lastday= %f, maxoffered= %d." firstday lastday maxoffered
             |> KapoinContractError.Raise
-      { MaxOffered= maxoffered; FirstDay= firstday; LastDay= lastday }
+      match cachedcount
+       with | Some (a, b) when (a < 0 || b < 0)
+              -> sprintf "Invalid schedule parameters, cachedcount= %d / %d." a b
+                 |> KapoinContractError.Raise
+            | _ -> ()
+      { MaxOffered= maxoffered; FirstDay= firstday; LastDay= lastday; CachedCount= cachedcount }
     
     /// TODO
     member public record.UpdateNode (node: KeyedDataNode) =
@@ -136,11 +179,16 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       node.GetOrCreateValue COWFirstDay |> ignore
       node.GetOrCreateValue COWLastDay |> ignore
       node.GetOrCreateValue COWMaxOffered |> ignore
-      // then fill in each of the four fields
+      if record.CachedCount.IsSome
+       then node.GetOrCreateValue COWCachedCount |> ignore
+       else node.values.Remove COWCachedCount |> ignore
+      // then fill in each of the fields
       node.values.[COWStatus] <- [ COWStateSchedule ]
-      node.values.[COWFirstDay] <- [ float2str record.FirstDay ]
-      node.values.[COWLastDay] <- [ float2str record.LastDay ]
+      node.values.[COWFirstDay] <- [ record.FirstDay |> SRCUtilClass.Float2Str6 ]
+      node.values.[COWLastDay] <- [ record.LastDay |> SRCUtilClass.Float2Str6  ]
       node.values.[COWMaxOffered] <- [ int2str record.MaxOffered ]
+      if record.CachedCount.IsSome
+       then node.values.[COWCachedCount] <- [ record.CachedCount.Value |> SRCUtilClass.Pair2Str ]
   
   
   /// Static requirement check result node with information about
@@ -219,6 +267,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
     /// if the contract offer count is already reached.
     /// Returns true if the offer count is strictly less than the limit.
     static member public CheckOfferCount (ctype: Type, ?schedulerec: COWScheduleRec) =
+      let ctypename = SRCUtilClass.CTypeName ctype
       let srecopt =
         match schedulerec with
         | Some srec -> Some srec // if a record was already given use that
@@ -227,22 +276,37 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
           | Schedule srec -> Some srec
           | _ -> None
       if srecopt.IsNone then false else // no schedule record, so nothing to do
-      let { LastDay= lastday; MaxOffered= maxoffered } = srecopt.Value
-      let offers = SRCUtilClass.ContractCount (ctype, [| ContractState.Offered; ContractState.Active |])
-      if offers < maxoffered then true else // limit not yet reached
-      let savedOk = (Hibernate { LastDay= lastday }).SaveContractData ctype
-      if not savedOk then
-        sprintf "The maximum number (%d) of offered contracts of type '%s' is reached"
-                maxoffered (SRCUtilClass.CTypeName ctype)
-        + sprintf " (%d contracts are offered or active)," offers
-        + sprintf " but unable to update COW node state to '%s'." COWStateHibernate
-        |> LogWarn
-      false
+      let { LastDay= lastday; MaxOffered= maxoffered; CachedCount= cachedcountopt } as srec = srecopt.Value
+      let offercountopt = SRCUtilClass.ContractCount (ctype, [| ContractState.Offered; ContractState.Active |])
+      let checkresult, updatednode =
+        match offercountopt, cachedcountopt with
+        | Some offercount, _ when offercount < maxoffered
+          -> true, // limit not yet reached (write actual offer count to cache)
+              Some <| Schedule { srec with CachedCount= Some (offercount, 1) }
+        | Some offercount, _
+          -> false, // downgrade COW node to Hibernate
+              Some <| Hibernate { LastDay= lastday }
+        | None, Some (a, b) when a + b < maxoffered
+           -> true, // we deduce from cached values that the limit is not yet reached
+               Some <| Schedule { srec with CachedCount= Some (a, b + 1) }
+        | None, Some _
+           -> false, None // possibly we are already at the limit
+        | None, None
+           -> "Contract system instance not available"
+              + sprintf " and contract offer count for '%s' is not cached." ctypename
+              |> LogWarn
+              false, None // we are out of options, we choose to return 'false' as the result
+      if updatednode.IsSome then
+        let savedOk = updatednode.Value.SaveContractData ctype
+        if not savedOk then
+          sprintf "Unable to update COW node for contracts of type '%s'." ctypename
+          |> LogWarn
+      checkresult
     
     /// Implementation example:
     /// Let contracts check the SRC result node.
     static member public IsOfferWindowOpen (c: KapoinContract) =
-      let closed (msg: string) = c.LogFn msg; false
+      let closed (msg: string) = false
       let now = SRCUtilClass.Day
       match ContractOfferWindowNode.GetContractData (c.GetType ()) with
       | NoNode ->
@@ -252,12 +316,12 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       | Hibernate _ ->
         closed "Contract offer in hibernation."
       | Schedule ({ FirstDay= firstday; LastDay= lastday; MaxOffered= maxoffered } as srec) ->
-        if now < firstday // it is a matter of disposition in which order we check the conditions
+        if now < firstday
          then closed "Contract offer window not yet reached."
-        elif ContractOfferWindowNode.CheckOfferCount (c.GetType (), srec) |> not
-         then closed "Maximum number of offered contracts of this type already reached; contract offer now in hibernation."
         elif now > lastday
          then closed <| sprintf "Contract offer window expired; lastday= %.4f, now= %.4f." lastday now
+        elif ContractOfferWindowNode.CheckOfferCount (c.GetType (), srec) |> not
+         then closed "Maximum number of offered contracts of this type reached."
          else true // the offer window is open; go ahead and offer the contract.
     
     /// Helper function that can be used for standard implementation of
@@ -290,7 +354,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
     
     /// TODO
     /// Temporary implementation, which is basically just a loop.
-    member public p.GetSchedule (now: UTDay): COWScheduleRec =
+    member public p.GetSchedule (ctype: Type, now: UTDay): COWScheduleRec =
       let forwardopen (t: UTDay) =
         t + p.lowwaitopen + (min (p.cwaitopen * t) p.highwaitopen)
       let forwardclose (t: UTDay) =
@@ -300,7 +364,10 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       while now > tlast do
         tfirst <- forwardopen tlast
         tlast <- forwardclose tfirst
-      { FirstDay= tfirst; LastDay= tlast; MaxOffered= p.maxoffered }
+      let cachedcount =
+        SRCUtilClass.ContractCount (ctype, [| ContractState.Offered; ContractState.Active |])
+        |> Option.map (fun k -> k, 0)
+      { FirstDay= tfirst; LastDay= tlast; MaxOffered= p.maxoffered; CachedCount= cachedcount }
   
   
   /// DESC_MISS
@@ -357,13 +424,12 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
     /// Try to fetch the value of each of the record fields from a keyed data
     /// node. If the values, or the node, do not exist the result is None.
     static member public TryParse (nodeopt: KeyedDataNode option) =
-      let flatten = function | None -> None | Some x -> x
       let lookup = fun s -> KeyedDataNode.TryGetValue s nodeopt
       let statusopt = lookup TimeStampStatus
       let prevcheckopt = lookup TimeStampPrevCheck
-                         |> Option.map str2float |> flatten
+                         |> Option.bind str2float
       let nextcheckopt = lookup TimeStampNextCheck
-                         |> Option.map str2float |> flatten
+                         |> Option.bind str2float
       match statusopt, prevcheckopt, nextcheckopt with
       | None, None, None ->
         None
@@ -387,8 +453,8 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       node.GetOrCreateValue TimeStampNextCheck|> ignore
       // then fill in each of the three fields
       node.values.[TimeStampStatus] <- [ record.Status ]
-      node.values.[TimeStampPrevCheck] <- [ float2str record.PrevCheck ]
-      node.values.[TimeStampNextCheck] <- [ float2str record.NextCheck ]
+      node.values.[TimeStampPrevCheck] <- [ record.PrevCheck |> SRCUtilClass.Float2Str6 ]
+      node.values.[TimeStampNextCheck] <- [ record.NextCheck |> SRCUtilClass.Float2Str6 ]
     
     /// Access the default cached data module (KapoinMainNode)
     /// and try to fetch the record field values.
@@ -477,6 +543,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
     /// Note that the first space center tracking data time stamp cannot be
     /// created by the SRC action itself.
     static member public WriteResult (ctype: Type) (checkaction: SRCheckAction) =
+      let ctypename = SRCUtilClass.CTypeName ctype
       let timestamp = SRCTimeStampRec.TryGetContractData ctype
       let cownode = ContractOfferWindowNode.GetContractData ctype
       let now = SRCUtilClass.Day
@@ -494,11 +561,23 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
           NoNode.SaveContractData (ctype) |> ignore // NoNode is used for NOT scheduling an open contract offer window
         | Schedule_Todo (scheduleparams, intervalparams) ->
           let mutable newTimeStamp = SRCTimeStampRec.New intervalparams
-          let newSchedule = scheduleparams.GetSchedule now
+          let newSchedule = scheduleparams.GetSchedule (ctype, now)
           if newSchedule.LastDay + 0.0001 < newTimeStamp.NextCheck // don't let the next check wait for too long
            then newTimeStamp <- { newTimeStamp with NextCheck= newSchedule.LastDay }
           let newCOWNode =
-            let offeredcount = SRCUtilClass.ContractCount (ctype, [| ContractState.Offered; ContractState.Active |])
+            let offeredcount =
+              match SRCUtilClass.ContractCount (ctype, [| ContractState.Offered; ContractState.Active |]), cownode with
+              | Some k, _ -> k // this is the regular case
+              | None, Schedule { CachedCount= Some (a, b) }
+                -> LogWarn <|
+                    "Contract system instance not available;"
+                    + sprintf " using cached values '%d / %d' in lieu of an actual count." a b
+                   a + b
+              | None, _
+                -> LogError <|
+                    "Contract system instance not available;"
+                    + sprintf " arbitrarily choosing 'Schedule' over 'Hibernate' for '%s'." ctypename
+                   0
             if offeredcount >= newSchedule.MaxOffered
              then Hibernate { LastDay= newSchedule.LastDay }
              else Schedule newSchedule
@@ -514,7 +593,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
         performcheck ()
       | None, Hibernate _
       | None, Schedule _ ->
-        sprintf "A contract offer window node for '%s' exists," ctype.Name
+        sprintf "A contract offer window node for '%s' exists," ctypename
         + " but the corresponding space center tracking record is missing."
         + " This is not a good situation for a static requirement check."
         + sprintf " Loaded scene is '%A' and the time (UT in days) is %.4f." HighLogic.LoadedScene now
