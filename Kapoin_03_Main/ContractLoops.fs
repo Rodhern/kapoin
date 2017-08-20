@@ -11,6 +11,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts
   open Rodhern.Kapoin.Helpers
   open Rodhern.Kapoin.Helpers.UtilityModule
   open Rodhern.Kapoin.Helpers.UtilityClasses
+  open Rodhern.Kapoin.Helpers.ReflectedWrappers
   open Rodhern.Kapoin.Helpers.Contracts
   open Rodhern.Kapoin.MainModule.Events
   
@@ -222,9 +223,10 @@ namespace Rodhern.Kapoin.MainModule.Contracts
       Array.map snd srcMethods
   
   
+  [< AbstractClass >]
   /// A KSP scene addon that uses the frame update method to continually
   /// check active Kapoin contracts for completion (or failure).
-  type KapoinContractLoopBehaviour (name: string, checktype: ContractCheck) =
+  type KapoinContractLoopBehaviour (name: string) =
     inherit SceneAddonBehaviour (name)
     
     let [< Literal >] framedivisor = 12
@@ -233,6 +235,9 @@ namespace Rodhern.Kapoin.MainModule.Contracts
     let mutable lastActionFrame = 0
     let mutable lastActionTime = 0.f
     let nextActionIndex = ref 0
+    
+    /// DESC_MISS
+    abstract member GetCheckType: unit -> ContractCheck
     
     member public this.Update (): unit =
       let framenb = UnityEngine.Time.frameCount
@@ -243,12 +248,18 @@ namespace Rodhern.Kapoin.MainModule.Contracts
           lastActionFrame <- framenb
           lastActionTime <- time
           if MainKapoinLoop.LoopStateIsRunning then
-            KapoinContract.CheckActiveContract checktype (Some nextActionIndex)
+            KapoinContract.CheckActiveContract (this.GetCheckType ()) (Some nextActionIndex)
   
   
   /// The Kapoin contract check loop running in the flight scene.
   type KapoinInFlightContractLoop () =
-    inherit KapoinContractLoopBehaviour (typeof<KapoinInFlightContractLoop>.Name, ContractCheck.FlightCheck)
+    inherit KapoinContractLoopBehaviour (typeof<KapoinInFlightContractLoop>.Name)
+    
+    let isSimRunning = KRASHHelper.SimulationRunning // checked once per KapoinInFlightContractLoop object only
+    override this.GetCheckType () =
+      if isSimRunning.Value
+       then ContractCheck.SimulationCheck
+       else ContractCheck.FlightCheck
   
   
   /// The Kapoin contract check loop running in the space center
@@ -256,7 +267,9 @@ namespace Rodhern.Kapoin.MainModule.Contracts
   /// Because of a limitation in the KSPAddon.Startup enumeration we actually
   /// need separate loops for the space center and tracking station scenes.
   type KapoinOnGroundContractLoop () =
-    inherit KapoinContractLoopBehaviour (typeof<KapoinOnGroundContractLoop>.Name, ContractCheck.GroundCheck)
+    inherit KapoinContractLoopBehaviour (typeof<KapoinOnGroundContractLoop>.Name)
+    
+    override this.GetCheckType () = ContractCheck.GroundCheck
     
     // To avoid spamming the log, we will blacklist a few talkative classes for the time being.
     

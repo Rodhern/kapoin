@@ -157,6 +157,36 @@ namespace Rodhern.Kapoin.Helpers
        then allrefs.[T].ContainsKey id
        else false
     
+    /// Generates a list of the keys for all cached objects.
+    /// This method is not used often, but occasionally it may be necessary
+    /// to iterate through all the cached objects.
+    member public cache.FullKeyList () =
+      let fulllist = // full list of keys for cached objects
+        [| for tkey in allrefs.Keys
+            do for namekey in allrefs.[tkey].Keys
+                do yield (tkey, namekey) |]
+      let comp (aT: Type, aN: string) (bT: Type, bN: string) =
+        match compare aN bN with
+        | 0 -> compare aT.FullName bT.FullName
+        | k -> k
+      do Array.Sort (fulllist, comp)
+      List.ofArray fulllist
+    
+    /// Helper function that will locate, remove and return all cached
+    /// references of a particular class. A particular class of references
+    /// in this case means all references cached with a type key argument
+    /// of 'T or one of its descendants.
+    /// Along with the references, the names and type keyes are also returned.
+    /// Notice: When 'remove' is true the returned keys are actually
+    ///  immediately invalid, because the references have already been removed
+    ///  from the cache when they are returned.
+    member public cache.ExtractAllCachedObjects<'T> remove =
+      cache.FullKeyList ()
+      |> List.filter (fun (t, _) ->
+         typeof<'T>.IsAssignableFrom t)
+      |> List.map (fun (tkey, id) ->
+         cache.LookupAndRemove (tkey, id, remove) :?> 'T, (id, tkey))
+    
     /// Look up reference in cache, by chain call to the public members
     /// 'Ready', 'GetInstance', 'ContainsRef' and 'GetRef'.
     /// If the reference exists it is returned as an option value.

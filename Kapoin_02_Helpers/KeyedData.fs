@@ -39,6 +39,25 @@ namespace Rodhern.Kapoin.Helpers.ScenarioData
       for key in buffer.Keys
        do klist.Add (key, Seq.exactlyOne buffer.[key])
       klist
+    
+    /// Look up a 'T list value in a SortedList.
+    /// If the key is missing from the sorted list
+    /// simply return an empty 'T list.
+    static member public Get (slist: SortedList<'K, 'T list>) (key: 'K) =
+      if slist.ContainsKey key
+       then slist.[key]
+       else []
+    
+    /// Overwrite a 'T list value in a SortedList.
+    /// If the key is not already present in the sorted list then add it.
+    /// An empty 'T list is treated as a special value that means
+    /// the key (if present) should be removed from the SortedList.
+    static member public Set (slist: SortedList<'K, 'T list>) (key: 'K) (valuelist: 'T list) =
+      match slist.ContainsKey key, valuelist with
+      | false, [] -> () // nothing to do
+      | false, _ -> slist.Add (key, valuelist) // add the pair
+      | true, [] -> slist.Remove key |> ignore // remove the existing pair
+      | true, _ -> slist.[key] <- valuelist // overwrite the pair
   
   
   /// A tree structure of string values.

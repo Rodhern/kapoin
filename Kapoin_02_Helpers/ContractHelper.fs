@@ -59,6 +59,18 @@ namespace Rodhern.Kapoin.Helpers.Contracts
       persistedkeys <- filterkeys
   
   
+  /// A variation of the DataAndLoggerNode intended to be used as a base type
+  /// for data marshalling when a KRASH simulation ends.
+  type SimulationResultNode =
+    inherit DataAndLoggerNode
+    
+    /// Constructor for a new simulation result node.
+    /// The constructor initializes the trace logger.
+    new (ptype: Type) as self =
+      { inherit DataAndLoggerNode () }
+      then self.InitTraceLogger ptype
+  
+  
   /// Type abbreviation,
   /// such that ContractState and ParameterState enjoy similar names.
   type ContractState = Contract.State
@@ -73,13 +85,17 @@ namespace Rodhern.Kapoin.Helpers.Contracts
     | FlightCheck
     /// DESC_MISS
     | GroundCheck
+    /// DESC_MISS
+    | SimulationCheck
     with
       member public cc.IsInFlightCheck with get () = cc = FlightCheck
       member public cc.IsOnGroundCheck with get () = cc = GroundCheck
+      member public cc.IsSimulatorCheck with get () = cc = SimulationCheck
       override cc.ToString () =
         match cc with
         | FlightCheck -> "In-Flight Contract Check"
         | GroundCheck -> "On-Ground Contract Check"
+        | SimulationCheck -> "Simulator Contract Check"
   
   
   /// DESC_MISS
@@ -146,6 +162,16 @@ namespace Rodhern.Kapoin.Helpers.Contracts
     /// but you may choose to override neither or both.
     abstract member GroundCheck: unit -> unit
     default cp.GroundCheck () = ()
+    
+    /// A contract parameter check similar to 'FlightCheck', intended to be
+    /// triggered only when the 'FLIGHT' scene is used for simulation (KRASH).
+    /// Usually you do not need to implement 'SimulatorCheck'; most contracts
+    /// have no good reason to update during simulations.
+    /// Notice: By the nature of the KRASH simulations, all progress is lost
+    ///  once the simulation is over. The simulator check will not help you
+    ///  persist the data.
+    abstract member SimulatorCheck: unit -> unit
+    default cp.SimulatorCheck () = ()
   
   
   /// Helper record type to list Kapoin contract parameters (KCPs)
@@ -357,12 +383,27 @@ namespace Rodhern.Kapoin.Helpers.Contracts
       kcps.CompleteKCPs |> List.iter (fun cp -> cp.GroundCheck ())
       kcps.IncompleteKCPs |> List.iter (fun cp -> cp.GroundCheck ())
     
+    /// A contract parameter check similar to 'FlightCheck', but triggered
+    /// only when the 'FLIGHT' scene is used for simulation (with 'KRASH').
+    /// The default implementation of 'SimulatorCheck' is similar to the
+    /// default implementation of 'FlightCheck', except it invokes the
+    /// contract parameter 'SimulatorCheck' methods, instead of the
+    /// 'FlightCheck' ones. By default 'FlightCheck' is not triggered during
+    /// simulations, but the parameter checks can of course easily be
+    /// forwarded from a 'SimulatorCheck' override.
+    abstract member SimulatorCheck: unit -> unit
+    default c.SimulatorCheck () =
+      let kcps = c.ListKapoinContractParameters ()
+      kcps.CompleteKCPs |> List.iter (fun cp -> cp.SimulatorCheck ())
+      kcps.IncompleteKCPs |> List.iter (fun cp -> cp.SimulatorCheck ())
+    
     /// DESC_MISS
     static member public CheckActiveContract (cctype: ContractCheck) (idx: int ref option) =
       let kclist = KapoinContract.ListKapoinContracts [| ContractState.Active |]
       let check (kc: KapoinContract) =
         if cctype.IsOnGroundCheck then kc.GroundCheck ()
         if cctype.IsInFlightCheck then kc.FlightCheck ()
+        if cctype.IsSimulatorCheck then kc.SimulatorCheck ()
       match idx with
       | None // this is a special case that might never be used
         -> List.iter check kclist

@@ -1,5 +1,9 @@
 ﻿# Kapoin changelog
 
+### Version 0.1.1.1
+* (work in progress)
+* Do not clear persisted node data on 'soft reset'.
+
 ### Version 0.1.0.3
 * Add cached contract offer count to persisted node data.
 

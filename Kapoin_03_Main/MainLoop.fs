@@ -128,21 +128,15 @@ namespace Rodhern.Kapoin.MainModule.Events
       // --
       monitor.UpdateState msg
       monitor.RefreshMainDataNode msg
+      monitor.TriggerTickEvents msg
       // debug (post)
       match msg with
-      | AppState msgtype
-        -> ()//do monitor.LogFn <| sprintf "Callback, AppState, %s." (msgtype.GetType().ToString())
-      | GameState msgtype
-        -> ()//do monitor.LogFn <| sprintf "Callback, GameState, %s." (msgtype.GetType().ToString())
-      | Level msgtype
-        -> ()//do monitor.LogFn <| sprintf "Callback, Level, %s." (msgtype.GetType().ToString())
-      | Scene msgtype
-        -> ()//do monitor.LogFn <| sprintf "Callback, Scene, %s." (msgtype.GetType().ToString())
-      | Tick MainLoop
-        -> ()//do monitor.LogFn <| sprintf "Callback, Tick (UT= %.0f)." (Planetarium.GetUniversalTime ())
-           maintickevent.Trigger [| monitor; new EventArgs () |] // TODO - note this line of code here in the middle of the 'debug (post)' section
-      | Tick msgtype
-        -> ()//do monitor.LogFn <| sprintf "Callback, Tick (UT= %.0f)." (Planetarium.GetUniversalTime ())
+      | AppState _
+      | GameState _
+      | Level _
+      | Scene _
+      | Tick _
+        -> () //do monitor.LogFn <| sprintf "Debug (post)."
       // --
     
     /// Helper method for .UpdateState method below.
@@ -228,18 +222,22 @@ namespace Rodhern.Kapoin.MainModule.Events
       // DESC_MISS
       | Level (LevelWasLoaded scene) when not (isGameScene scene)
         -> monitor.LogFn "Reset (hard)"
-           KapoinMainNode.ResetNode true
+           KapoinMainNode.ResetNode Hard
       
       // DESC_MISS
       | GameState (Created game) when isGameScene HighLogic.LoadedScene
         -> monitor.LogFn "Reset (soft)"
-           KapoinMainNode.ResetNode false
+           KapoinMainNode.ResetNode Soft
       
       // DESC_MISS
-      | GameState (Load node)
-      | GameState (LoadRevert node) when isGameScene HighLogic.LoadedScene
+      | GameState (LoadRevert node)
+        -> monitor.LogFn "Revert (similar to load)"
+           KapoinMainNode.LoadNode RevertLoad node
+      
+      // DESC_MISS
+      | GameState (Load node) when isGameScene HighLogic.LoadedScene
         -> monitor.LogFn "Load (Kapoin or otherwise)"
-           KapoinMainNode.LoadNode node
+           KapoinMainNode.LoadNode StdLoad node
       
       // DESC_MISS
       | GameState (Save node) when loopstate = Running
@@ -249,6 +247,17 @@ namespace Rodhern.Kapoin.MainModule.Events
       // DESC_MISS
       | GameState (Save node)
         -> monitor.LogFn <| sprintf "Debug, ignore SAVE (loop state = %A)" loopstate // todo
+      
+      // DESC_MISS
+      | _ -> ()
+    
+    /// TODO (actually only the main loop has its own CLI metadata tick event)
+    member monitor.TriggerTickEvents (msg: LoopMessageType) =
+      match msg with
+      
+      // DESC_MISS
+      | Tick MainLoop
+        -> maintickevent.Trigger [| monitor; new EventArgs () |]
       
       // DESC_MISS
       | _ -> ()

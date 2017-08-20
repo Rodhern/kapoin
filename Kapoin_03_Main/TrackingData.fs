@@ -10,6 +10,7 @@ namespace Rodhern.Kapoin.MainModule.Data
   open Rodhern.Kapoin.Helpers.UtilityClasses
   open Rodhern.Kapoin.Helpers.GameSettings
   open Rodhern.Kapoin.Helpers.ScenarioData
+  open Rodhern.Kapoin.Helpers.Contracts
   open Rodhern.Kapoin.MainModule.Cache
   
   
@@ -101,19 +102,59 @@ namespace Rodhern.Kapoin.MainModule.Data
       member data.KeyedData = data.KeyedData
   
   
+  /// TODO
+  type SoftResetContext =
+       | Hard
+       | Soft
+       | StdLoad
+       | RevertLoad
+    with
+    
+    /// Customized string output format.
+    override this.ToString () =
+      match this with
+      | Hard -> "Hard"
+      | Soft -> "Soft"
+      | StdLoad -> "Load"
+      | RevertLoad -> "Revert"
+  
+  
+  /// TODO
+  type SoftResetStack =
+    
+    /// Default constructor.
+    new () = { }
+    
+    /// TODO
+    member private srs.Put (key) (countinfo) =
+      ()
+    
+    /// TODO
+    member private srs.Pop (key) =
+      ()
+    
+    /// TODO
+    member private srs.Clear () =
+      ()
+    
+    /// TODO
+    member public srs.UpdateSoftResetStack (context: SoftResetContext) =
+      ()
+  
+  
   /// DESC_MISS
   type KapoinMainNode () =
     // We could inherit from 'ScenarioDataModule', but instead we have chosen
     // the "Common DataAndLoggerNode container implementation" route.
-    
-    static let [< Literal >] Hard = true
-    static let [< Literal >] Soft = false
     
     /// Return first level subnodes that are Kapoin main nodes.
     static let filteredsubnodes (topnode: ConfigNode) =
       [ for node in topnode.nodes
          do if node.name = Constants.KapoinMainNode
              then yield node ]
+    
+    /// TODO
+    let softresetstack: SoftResetStack = new SoftResetStack ()
     
     // #region DataAndLoggerNode container implementation
     // ---- ---- ---- ---- ---- ----
@@ -138,22 +179,38 @@ namespace Rodhern.Kapoin.MainModule.Data
     // ---- ---- ---- ---- ---- ----
     // #endregion
     
-    /// DESC_MISS
-    static member public ResetNode (hard: bool) =
-      if IndexBoard.Ready then // otherwise there is no work to be done
-        let cache = IndexBoard.Instance
-        match hard, cache.ContainsRef<KapoinMainNode> () with
-        | Hard, true -> cache.RemoveRef<KapoinMainNode> () // Hard Reset
-        | Hard, false -> () // no work to be done
-        | Soft, true -> (cache.GetRef<KapoinMainNode> ()).Clear () // Soft Reset
-        | Soft, false -> cache.AddRef<KapoinMainNode> (new KapoinMainNode ()) // Soft initialize
+    /// TODO
+    static member public ResetNode (context: SoftResetContext) =
+      if not IndexBoard.Ready then () else // no work to be done
+      let cache = IndexBoard.Instance
+      let iscached = cache.ContainsRef<KapoinMainNode> ()
+      if (context, iscached) = (Hard, false) then () else // no work to be done
+      match context, iscached with
+      | StdLoad, false
+      | RevertLoad, false
+          -> "Cannot reset node."
+             + sprintf " Kapoin main node is missing from cache in '%O' context."
+                       context
+             |> LogError
+      | _ -> ()
+      if not iscached // create a fresh node and cache it, if we haven't got one already
+       then let newnode = new KapoinMainNode ()
+            do cache.AddRef<KapoinMainNode> newnode
+      let mainnode = cache.GetRef<KapoinMainNode> ()
+      do mainnode.UpdateSoftResetStack context
+      match context with
+      | Hard -> do cache.RemoveRef<KapoinMainNode> () // Hard Reset
+      | Soft -> () // do nothing; the soft reset stack was already updated
+      | StdLoad
+      | RevertLoad
+          -> mainnode.Clear () // clear node before loading new information
     
     /// DESC_MISS
-    static member public LoadNode (topnode: ConfigNode) =
+    static member public LoadNode (context: SoftResetContext) (topnode: ConfigNode) =
       if not IndexBoard.Ready then
         LogWarn <| sprintf "Cannot load '%s' node; Kapoin cache not yet ready." Constants.KapoinMainNode
        else
-        KapoinMainNode.ResetNode Soft // First, soft reset the node.
+        KapoinMainNode.ResetNode context // First, soft reset the node.
         match filteredsubnodes topnode with // Load node if exactly one Kapoin main node is found.
         | [] -> () // nothing to do, soft reset was already done
         | [datanode] -> (IndexBoard.Instance.GetRef<KapoinMainNode> ()).OnLoad datanode
@@ -166,6 +223,10 @@ namespace Rodhern.Kapoin.MainModule.Data
        else
         let datanode = topnode.AddNode Constants.KapoinMainNode // always assume we are served a pristine topnode
         do (IndexBoard.Instance.GetRef<KapoinMainNode> ()).OnSave datanode
+    
+    /// TODO
+    member public mainnode.UpdateSoftResetStack (context: SoftResetContext) =
+      softresetstack.UpdateSoftResetStack (context)
     
     /// Clear the keyed data. All existing keyed data is discarded.
     member public mainnode.Clear () =
