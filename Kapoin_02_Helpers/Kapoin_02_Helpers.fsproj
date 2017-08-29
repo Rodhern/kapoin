@@ -43,9 +43,10 @@
     <Compile Include="LoopEventManager.fs" />
     <Compile Include="ScenarioDataModule.fs" />
     <Compile Include="CraftAndPartListeners.fs" />
+    <Compile Include="Contracts.fs" />
+    <Compile Include="ReflectedWrappers.fs" />
     <Compile Include="FFAdapterHelper.fs" />
     <Compile Include="ScrapYardHelper.fs" />
-    <Compile Include="ContractHelper.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kapoin_01_Wrappers\Kapoin_01_Wrappers.csproj">
