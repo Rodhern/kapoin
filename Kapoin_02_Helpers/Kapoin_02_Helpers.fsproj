@@ -43,6 +43,7 @@
     <Compile Include="LoopEventManager.fs" />
     <Compile Include="ScenarioDataModule.fs" />
     <Compile Include="CraftAndPartListeners.fs" />
+    <Compile Include="SoftResetStack.fs" />
     <Compile Include="Contracts.fs" />
     <Compile Include="ReflectedWrappers.fs" />
     <Compile Include="FFAdapterHelper.fs" />

@@ -278,7 +278,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts
     /// Blacklisting can be turned on and off at any time and will last until
     /// turned on or off again, either at a relevant scene change or manually.
     member public loop.Blacklist (blacklist: bool) =
-      [| "StaticRequirementCheckScheduler"; "C70"; "C60" |]
+      [| "StaticRequirementCheckScheduler"; "C350"; "C70"; "C60" |]
       |> Array.iter (if blacklist then LoggerBlackList.Add else LoggerBlackList.Remove)
       loop.LogFn <| (if blacklist then "Enable" else "Disable") + " ground scene log blacklisting."
     

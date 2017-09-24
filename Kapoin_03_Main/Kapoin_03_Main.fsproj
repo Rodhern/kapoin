@@ -43,6 +43,7 @@
     <Compile Include="ContractSRCData.fs" />
     <Compile Include="ContractExample60.fs" />
     <Compile Include="ContractExample70.fs" />
+    <Compile Include="ContractExample350.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kapoin_02_Helpers\Kapoin_02_Helpers.fsproj">

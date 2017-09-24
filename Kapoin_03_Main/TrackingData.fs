@@ -10,7 +10,9 @@ namespace Rodhern.Kapoin.MainModule.Data
   open Rodhern.Kapoin.Helpers.UtilityClasses
   open Rodhern.Kapoin.Helpers.GameSettings
   open Rodhern.Kapoin.Helpers.ScenarioData
+  open Rodhern.Kapoin.Helpers.Events
   open Rodhern.Kapoin.Helpers.Contracts
+  open Rodhern.Kapoin.Helpers.ReflectedWrappers
   open Rodhern.Kapoin.MainModule.Cache
   
   
@@ -32,12 +34,6 @@ namespace Rodhern.Kapoin.MainModule.Data
   
   
   open Constants
-  
-  /// A simple interface that denotes
-  /// that the class contains a KeyedData property.
-  type IKeyedData =
-    abstract member KeyedData: KeyedDataNode
-  
   
   [< KSPScenario (ScenarioCreationOptions.AddToNewCareerGames, [| GameScenes.SPACECENTER |]) >]
   /// DESC_MISS
@@ -102,46 +98,6 @@ namespace Rodhern.Kapoin.MainModule.Data
       member data.KeyedData = data.KeyedData
   
   
-  /// TODO
-  type SoftResetContext =
-       | Hard
-       | Soft
-       | StdLoad
-       | RevertLoad
-    with
-    
-    /// Customized string output format.
-    override this.ToString () =
-      match this with
-      | Hard -> "Hard"
-      | Soft -> "Soft"
-      | StdLoad -> "Load"
-      | RevertLoad -> "Revert"
-  
-  
-  /// TODO
-  type SoftResetStack =
-    
-    /// Default constructor.
-    new () = { }
-    
-    /// TODO
-    member private srs.Put (key) (countinfo) =
-      ()
-    
-    /// TODO
-    member private srs.Pop (key) =
-      ()
-    
-    /// TODO
-    member private srs.Clear () =
-      ()
-    
-    /// TODO
-    member public srs.UpdateSoftResetStack (context: SoftResetContext) =
-      ()
-  
-  
   /// DESC_MISS
   type KapoinMainNode () =
     // We could inherit from 'ScenarioDataModule', but instead we have chosen
@@ -153,7 +109,7 @@ namespace Rodhern.Kapoin.MainModule.Data
          do if node.name = Constants.KapoinMainNode
              then yield node ]
     
-    /// TODO
+    /// Keep track of imminent soft resets (when known).
     let softresetstack: SoftResetStack = new SoftResetStack ()
     
     // #region DataAndLoggerNode container implementation
@@ -200,7 +156,7 @@ namespace Rodhern.Kapoin.MainModule.Data
       do mainnode.UpdateSoftResetStack context
       match context with
       | Hard -> do cache.RemoveRef<KapoinMainNode> () // Hard Reset
-      | Soft -> () // do nothing; the soft reset stack was already updated
+      | Soft _ -> () // do nothing; the soft reset stack was already updated
       | StdLoad
       | RevertLoad
           -> mainnode.Clear () // clear node before loading new information
@@ -211,10 +167,19 @@ namespace Rodhern.Kapoin.MainModule.Data
         LogWarn <| sprintf "Cannot load '%s' node; Kapoin cache not yet ready." Constants.KapoinMainNode
        else
         KapoinMainNode.ResetNode context // First, soft reset the node.
-        match filteredsubnodes topnode with // Load node if exactly one Kapoin main node is found.
-        | [] -> () // nothing to do, soft reset was already done
-        | [datanode] -> (IndexBoard.Instance.GetRef<KapoinMainNode> ()).OnLoad datanode
-        | _ -> LogError <| sprintf "Multiple '%s' nodes encountered during load; cache node reset." Constants.KapoinMainNode
+        if not (IndexBoard.Instance.ContainsRef<KapoinMainNode> ()) then
+          LogWarn <| sprintf "Cannot load '%s' node; Kapoin main node missing after node reset." Constants.KapoinMainNode
+         else
+          let mainnode = IndexBoard.Instance.GetRef<KapoinMainNode> ()
+          match filteredsubnodes topnode with // Load node if exactly one Kapoin main node is found.
+          | [] -> () // nothing to do, soft reset was already done
+          | [datanode] -> mainnode.OnLoad datanode
+          | _ -> LogError <| sprintf "Multiple '%s' nodes encountered during load; cache node reset." Constants.KapoinMainNode
+          if context <> StdLoad // at the moment this is done even for non-Kapoin games
+           then () // just a weird way to express that we only want to perform the below marshalling or resetting in a StdLoad context
+          elif mainnode.IsSoftResetStackInSimulationContext ()
+           then mainnode.MarshalSimResults ()
+           else mainnode.PurgeSimResults ()
     
     /// DESC_MISS
     static member public SaveNode (topnode: ConfigNode) =
@@ -224,9 +189,69 @@ namespace Rodhern.Kapoin.MainModule.Data
         let datanode = topnode.AddNode Constants.KapoinMainNode // always assume we are served a pristine topnode
         do (IndexBoard.Instance.GetRef<KapoinMainNode> ()).OnSave datanode
     
+    /// Create one (new) node to replace all existing ones of a certain name.
+    /// This helper function always leaves exactly one container node, even if
+    /// that node is empty.
+    member public mainnode.MergeContainers (containername: string) =
+      let vdict = new Dictionary<string, string ResizeArray> ()
+      let ndict= new Dictionary<string, KeyedDataNode ResizeArray> ()
+      let dict2slist (dict: Dictionary<'K, 'T ResizeArray>) =
+        let slist = new SortedList<'K, 'T list> ()
+        for key in dict.Keys
+         do let vals = dict.[key] |> List.ofSeq
+            slist.Add (key, vals)
+        slist
+      let keyednodes = mainnode.KeyedData.nodes
+      let existingcontainers =
+        if keyednodes.ContainsKey containername
+         then keyednodes.[containername]
+         else []
+      for container in existingcontainers
+       do for vkey in container.values.Keys
+           do let vvals = container.values.[vkey]
+              if vdict.ContainsKey vkey
+               then vdict.[vkey].AddRange vvals
+               else vdict.Add (vkey, new ResizeArray<_> (vvals))
+          for nkey in container.nodes.Keys
+           do let nvals = container.nodes.[nkey]
+              if ndict.ContainsKey nkey
+               then ndict.[nkey].AddRange nvals
+               else ndict.Add (nkey, new ResizeArray<_> (nvals))
+      let newcontainer =
+        { values= dict2slist vdict
+          nodes= dict2slist ndict }
+      if keyednodes.ContainsKey containername
+       then keyednodes.[containername] <- [ newcontainer ]
+       else keyednodes.Add (containername, [ newcontainer ])
+      newcontainer // the new container replaced the existing ones
+    
+    /// TODO
+    member public mainnode.MarshalSimResults () =
+      if not IndexBoard.Ready then () else
+      mainnode.LogFn "Marshal simulation results to loaded game via cleared main node, (debug)"
+      let container = mainnode.MergeContainers Constants.SimResCollectionNode
+      let envelopes = KeyedList.Get container.nodes Constants.SimResEnvelopeNode
+      let cobjs = IndexBoard.Instance.ExtractAllCachedObjects<SimulationResultNode> (false)
+      let newenvelopes = SimulationResultNode.UpdatedContainerContent envelopes cobjs
+      do mainnode.LogFn <| sprintf " %d envelope(s) of simulation data to marshal." newenvelopes.Length
+      if newenvelopes.IsEmpty
+       then mainnode.KeyedData.nodes.Remove Constants.SimResCollectionNode |> ignore
+       else KeyedList.Set container.nodes Constants.SimResEnvelopeNode newenvelopes
+    
+    /// TODO
+    member public mainnode.PurgeSimResults () =
+      mainnode.LogFn "Purge cache for simulation results, (debug)" // todo
+      let clearednodes = IndexBoard.Instance.ExtractAllCachedObjects<SimulationResultNode> true
+      do mainnode.LogFn <| sprintf " %d objects cleared from cache." clearednodes.Length // todo
+    
     /// TODO
     member public mainnode.UpdateSoftResetStack (context: SoftResetContext) =
-      softresetstack.UpdateSoftResetStack (context)
+      let sim = KRASHHelper.SimulationRunning // todo debug
+      softresetstack.UpdateSoftResetStack (context, mainnode.LogFn, sim)
+    
+    /// TODO
+    member public mainnode.IsSoftResetStackInSimulationContext () =
+      softresetstack.IsSimulationContext ()
     
     /// Clear the keyed data. All existing keyed data is discarded.
     member public mainnode.Clear () =

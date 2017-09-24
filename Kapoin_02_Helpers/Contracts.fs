@@ -13,6 +13,26 @@ namespace Rodhern.Kapoin.Helpers.Contracts
   open Rodhern.Kapoin.Helpers.ScenarioData
   
   
+  module Constants =
+    
+    [< Literal >]
+    let public SimResCollectionNode = "SIMULATION_RESULT_NODES"
+    
+    [< Literal >]
+    let public SimResEnvelopeNode = "SIM_RES_NODE"
+    
+    [< Literal >]
+    let public SimResDataNode = "DATA"
+    
+    [< Literal >]
+    let public SimResNodeNameKey = "name"
+    
+    [< Literal >]
+    let public SimResNodeSortKey = "sort"
+  
+  
+  open Constants
+  
   /// Specialized filtering variation of DataAndLoggerNode,
   /// used to persist custom contract and contract parameter data.
   type FilteredContractData () =
@@ -69,11 +89,57 @@ namespace Rodhern.Kapoin.Helpers.Contracts
     new (ptype: Type) as self =
       { inherit DataAndLoggerNode () }
       then self.InitTraceLogger ptype
-  
-  
-  /// Type abbreviation,
-  /// such that ContractState and ParameterState enjoy similar names.
-  type ContractState = Contract.State
+    
+    /// TODO
+    member public result.AsEnclosedData (name: string, tkey: Type) =
+      let envelope = KeyedDataNode.EmptyNode
+      do envelope.values.Add (SimResNodeNameKey, [name])
+      do envelope.values.Add (SimResNodeSortKey, [tkey.Name])
+      do envelope.nodes.Add (SimResDataNode, [result.KeyedData])
+      envelope
+    
+    /// TODO
+    static member public HasSingleEnclosedData (envelope: KeyedDataNode) =
+      if envelope.nodes.ContainsKey SimResDataNode
+       then match envelope.nodes.[SimResDataNode] with
+            | [ singleresult ] when not singleresult.IsEmpty -> true
+            | _ -> false
+       else false
+    
+    /// TODO
+    static member public IsEnclosedMatch (name: string, tkey: Type) (envelope: KeyedDataNode) =
+      (envelope.values.ContainsKey SimResNodeNameKey) &&
+      (envelope.values.ContainsKey SimResNodeSortKey) &&
+      (envelope.values.[SimResNodeNameKey] = [name]) &&
+      (envelope.values.[SimResNodeSortKey] = [tkey.Name])
+    
+    /// Checks a list of names and types for a match, by checking the envelope
+    /// against each name and type pair with 'IsEnclosedMatch'.
+    static member private IsMatch (namesandtypes: (string * Type) list) (envelope: KeyedDataNode) =
+      namesandtypes
+      |> List.map SimulationResultNode.IsEnclosedMatch
+      |> List.map ((|>) envelope)
+      |> List.exists id
+    
+    /// Given a list of envelopes, return a shallow copy with those envelopes
+    /// that match the given name and type key.
+    static member public FilterByNameAndType (name: string, tkey: Type) =
+      List.filter (SimulationResultNode.IsMatch [name, tkey])
+    
+    /// Given a list of envelopes, return a shallow copy with those envelopes
+    /// that have no matches among the given name and type key pairs.
+    static member public FilterAwayMatches (namesandtypes: (string * Type) list) =
+      List.filter ((SimulationResultNode.IsMatch namesandtypes) >> not)
+    
+    /// TODO
+    static member public UpdatedContainerContent
+                          (envelopes: KeyedDataNode list)
+                          (results: (SimulationResultNode*(string*Type)) list) =
+      let enclose (result: SimulationResultNode, (nameandtype: string * Type)) =
+        result.AsEnclosedData nameandtype
+      [ yield! SimulationResultNode.FilterAwayMatches (List.map snd results) envelopes
+        yield! List.map enclose results ]
+      |> List.filter SimulationResultNode.HasSingleEnclosedData
   
   
   /// Indicates the type of contract check to perform on contract parameters.
@@ -98,6 +164,11 @@ namespace Rodhern.Kapoin.Helpers.Contracts
         | SimulationCheck -> "Simulator Contract Check"
   
   
+  /// Type abbreviation,
+  /// such that ContractState and ParameterState enjoy similar names.
+  type ContractState = Contract.State
+  
+  
   /// DESC_MISS
   type KapoinContractParameter =
     inherit ContractParameter
@@ -109,7 +180,7 @@ namespace Rodhern.Kapoin.Helpers.Contracts
     new () as kcpobj =
       { inherit ContractParameter ()
         data= new FilteredContractData () } then
-      do kcpobj.data.Initialize (kcpobj.GetType (), kcpobj.PersistedKeys ())
+      do kcpobj.data.Initialize (kcpobj.GetType (), kcpobj.PersistedKeys ()) // todo - not actually a valid construction
     
     /// Write message to trace listeners and KSP log file.
     member public cp.LogFn = cp.data.LogFn
@@ -120,6 +191,7 @@ namespace Rodhern.Kapoin.Helpers.Contracts
     /// Access to keyed filtered custom data.
     member public cp.FilteredData = cp.data.KeyedData
     
+    [< Obsolete >]
     /// An array with all keys used to hold custom keyed data.
     /// Make sure to override this in actual contract parameter classes.
     abstract member PersistedKeys: unit -> string array
@@ -198,7 +270,7 @@ namespace Rodhern.Kapoin.Helpers.Contracts
         data= new FilteredContractData ()
         canbedeclined= true
         canbecancelled= true } then
-      do kcobj.data.Initialize (kcobj.GetType (), kcobj.PersistedKeys ())
+      do kcobj.data.Initialize (kcobj.GetType (), kcobj.PersistedKeys ()) // todo - not actually a valid construction
     
     /// Default value of CanBeDeclined is 'true'.
     val mutable canbedeclined: bool
@@ -215,6 +287,7 @@ namespace Rodhern.Kapoin.Helpers.Contracts
     /// Access to keyed filtered custom data.
     member public c.FilteredData = c.data.KeyedData
     
+    [< Obsolete >]
     /// An array with all keys used to hold custom keyed data.
     /// Make sure to override this in actual contract classes.
     abstract member PersistedKeys: unit -> string array
@@ -323,7 +396,7 @@ namespace Rodhern.Kapoin.Helpers.Contracts
                    | :? KapoinContract as kc -> yield kc
                    | _ -> () ]
              |> List.filter statefilter
-      | _ -> LogError "Contract system instance not available."; []
+      | _ -> LogError "Contract system instance not available."; [] // todo - can still occur (example change from Space Center scene to Flight scene)
     
     /// Check if the generated contract have siblings already in play
     /// whether offered, active, completed, failed or cancelled.

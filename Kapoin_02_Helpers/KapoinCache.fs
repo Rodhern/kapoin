@@ -131,26 +131,29 @@ namespace Rodhern.Kapoin.Helpers
             |> KapoinCacheAccessError.Raise
        else br.Add (id, ref)
     
+    [< RequiresExplicitTypeArguments >]
     /// Remove reference from cache; the reference itself remains untouched.
-    /// Note: The generic parameter 'T should be passed explicitly;
+    /// Note: The generic parameter 'T must be passed explicitly;
     ///  otherwise F# type inference may well default to System.Object .
     member public c.RemoveRef<'T> (?name: string) =
       let T, id = typeof<'T>, defaultArg name ""
       do c.LookupAndRemove (T, id, true) |> ignore
     
+    [< RequiresExplicitTypeArguments >]
     /// Retrieve cached reference by key (type and name).
-    /// Note: The generic parameter 'T should be passed explicitly;
+    /// Note: The generic parameter 'T must be passed explicitly;
     ///  otherwise F# type inference may well default to System.Object .
     member public c.GetRef<'T> (?name: string) =
       let T, id = typeof<'T>, defaultArg name ""
       c.LookupAndRemove (T, id, false) :?> 'T
     
+    [< RequiresExplicitTypeArguments >]
     /// Look up cached reference by key (type and name).
     /// Returns true if a reference with the given key is in cache.
     /// Notice: Both type and name part of the key must match exactly.
     ///  For instance, you cannot assume that 'T is identical to the run-time
-    ///  type of the reference. It is a good idea to pass the generic
-    ///  parameter 'T explicitly.
+    ///  type of the reference. The generic parameter 'T must be passed
+    ///  explicitly.
     member public c.ContainsRef<'T> (?name: string) =
       let T, id = typeof<'T>, defaultArg name ""
       if allrefs.ContainsKey T
@@ -176,7 +179,7 @@ namespace Rodhern.Kapoin.Helpers
     /// references of a particular class. A particular class of references
     /// in this case means all references cached with a type key argument
     /// of 'T or one of its descendants.
-    /// Along with the references, the names and type keyes are also returned.
+    /// Along with the references, the names and type keys are also returned.
     /// Notice: When 'remove' is true the returned keys are actually
     ///  immediately invalid, because the references have already been removed
     ///  from the cache when they are returned.

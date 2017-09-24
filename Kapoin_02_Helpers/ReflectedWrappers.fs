@@ -23,7 +23,13 @@ namespace Rodhern.Kapoin.Helpers.ReflectedWrappers
   /// DESC_MISS
   type KRASHHelper =
     
-    /// Private reflection helper method that look up the KRASH plugin
+    /// Iterate through current game's scenarios and look for 'KRASH'.
+    /// In version 0.5.23.1 the module name comes up as "KRASHPersistent".
+    static member public ModPresent
+     with get () =
+      HighLogic.CurrentGame.scenarios.Exists (fun scn -> scn.moduleName = "KRASHPersistent")
+    
+    /// Private reflection helper method that looks up the KRASH plugin
     /// variable 'shelterSimulationActive'.
     static member private ShelterSimulationActive () =
       let staticflags = BindingFlags.Public ||| BindingFlags.Static
@@ -41,9 +47,9 @@ namespace Rodhern.Kapoin.Helpers.ReflectedWrappers
                  let boolvar = (bvarinfo :?> Reflection.FieldInfo).GetValue persistvar
                  yield boolvar :?> bool ] with
       | [] -> None | [ b ] -> Some b
-      | list ->
+      | blist ->
         "KRASHHelper.ShelterSimulationActive: Multiple results;"
-        + sprintf " result list length was %d." list.Length
+        + sprintf " result list length was %d." blist.Length
         |> LogWarn
         None
     

@@ -136,7 +136,7 @@ namespace Rodhern.Kapoin.MainModule.Events
       | Level _
       | Scene _
       | Tick _
-        -> () //do monitor.LogFn <| sprintf "Debug (post)."
+        -> ()
       // --
     
     /// Helper method for .UpdateState method below.
@@ -227,7 +227,7 @@ namespace Rodhern.Kapoin.MainModule.Events
       // DESC_MISS
       | GameState (Created game) when isGameScene HighLogic.LoadedScene
         -> monitor.LogFn "Reset (soft)"
-           KapoinMainNode.ResetNode Soft
+           KapoinMainNode.ResetNode (Soft game)
       
       // DESC_MISS
       | GameState (LoadRevert node)

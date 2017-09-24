@@ -197,6 +197,12 @@ namespace Rodhern.Kapoin.Helpers.ScenarioData
         results.SimplePairs ()
   
   
+  /// A simple interface that denotes that
+  /// the class contains a KeyedData property.
+  type IKeyedData =
+    abstract member KeyedData: KeyedDataNode
+  
+  
   /// A DataAndLoggerNode object is a container of a two ingredients.
   /// One ingredient is the keyed data, in a KeyedDataNode.
   /// The other is a trace logger unique to each DateNodeAndLogger instance.

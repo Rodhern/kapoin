@@ -1,7 +1,7 @@
 ﻿# Kapoin changelog
 
-### Version 0.1.1.1
-* (work in progress)
+### Version 0.1.0.4
+* Add example contract 'Supersonic simulation' (C350).
 * Do not clear persisted node data on 'soft reset'.
 
 ### Version 0.1.0.3
