@@ -22,13 +22,13 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>..\..\KSP_x64_Data_v130\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\KSP_x64_Data_v131\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\..\KSP_x64_Data_v130\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\..\KSP_x64_Data_v131\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\KSP_x64_Data_v130\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\KSP_x64_Data_v131\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -41,9 +41,11 @@
     <Compile Include="KapoinRibbons.fs" />
     <Compile Include="ContractLoops.fs" />
     <Compile Include="ContractSRCData.fs" />
+    <Compile Include="MilestoneData.fs" />
     <Compile Include="ContractExample60.fs" />
     <Compile Include="ContractExample70.fs" />
     <Compile Include="ContractExample350.fs" />
+    <Compile Include="MilestoneContract_I.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kapoin_02_Helpers\Kapoin_02_Helpers.fsproj">

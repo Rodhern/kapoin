@@ -20,6 +20,7 @@ namespace Rodhern.Kapoin.Helpers.FinalFrontier
        | Engineer
        | Scientist
        | Other of string
+       
        static member Parse (title: string) =
          match title with
          | "Pilot" -> Pilot
@@ -40,6 +41,7 @@ namespace Rodhern.Kapoin.Helpers.FinalFrontier
        | PlantFlag
        | Recover
        | Other of string
+       
        static member Parse (event: string) =
          match event with
          | "BoardVessel" -> BoardVessel
@@ -95,6 +97,7 @@ namespace Rodhern.Kapoin.Helpers.FinalFrontier
        | NoBody
        /// An unrecognized celestial body.
        | Other of string
+       
        static member Parse (body: string) =
          match body with
          | "Sun" -> Kerbol
@@ -123,6 +126,7 @@ namespace Rodhern.Kapoin.Helpers.FinalFrontier
          Body: ExpLogCelestialBody
          InProgress: bool
          FlightNo: int }
+       
        static member New (entry: FlightLog.Entry) (inprogress: bool) =
          { Activity= ExpLogEntryType.Parse entry.``type``
            Body= ExpLogCelestialBody.Parse entry.target

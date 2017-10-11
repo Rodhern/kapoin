@@ -456,7 +456,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       node.values.[TimeStampPrevCheck] <- [ record.PrevCheck |> SRCUtilClass.Float2Str6 ]
       node.values.[TimeStampNextCheck] <- [ record.NextCheck |> SRCUtilClass.Float2Str6 ]
     
-    /// Access the default cached data module (KapoinMainNode)
+    /// Access the cached tracking data (KapoinSpaceCenterTrackingData)
     /// and try to fetch the record field values.
     /// The contract type parameter is used to find the proper subnode.
     static member public TryGetContractData (ctype: Type) =
@@ -467,7 +467,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       |> KeyedDataNode.TryGetSubnode TimeStampNodeName
       |> SRCTimeStampRec.TryParse
     
-    /// Access the default cached data module (KapoinMainNode)
+    /// Access the cached tracking data (KapoinSpaceCenterTrackingData)
     /// and create or update the time stamp record field values.
     /// The contract type parameter is used to find the proper subnode.
     member public record.SaveContractData (ctype: Type) =
@@ -501,7 +501,7 @@ namespace Rodhern.Kapoin.MainModule.Contracts.SRCData
       let timestamp = SRCTimeStampRec.New { delta= 0.001 }
       timestamp.UpdateTimeStampNode ctype
     
-    /// Access the default cached data module (KapoinMainNode)
+    /// Access the cached tracking data (KapoinSpaceCenterTrackingData)
     /// and delete existing time stamp node(s) for the given contract type.
     /// The contract type parameter is used to find the proper subnode.
     static member public DeleteTimeStampNode (ctype: Type) =

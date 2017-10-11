@@ -61,7 +61,6 @@ namespace Rodhern.Kapoin.Helpers.GameSettings
     
     
     [< DefaultValue; GameParameters.CustomParameterUI ("Track Progress", toolTip = "Enable progress tracking in Career Mode.") >]
-    /// An example setting; in this case a checkbox.
     /// Kapoin Career Progress Tracking should be turned off when 'TrackProgress' is selected 'false'.
     val mutable public TrackProgress: bool
   

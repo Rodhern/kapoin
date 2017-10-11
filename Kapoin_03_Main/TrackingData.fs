@@ -366,4 +366,17 @@ namespace Rodhern.Kapoin.MainModule.Data
            | None -> sprintf "Failed parsing field '%s'." name
                      |> KapoinPersistenceError.Raise
            | Some value -> value
+      
+      /// Clone by recursive shallow cloning of the sorted list collections.
+      member public node.Clone () =
+        let rec shallowcopy (kdnode: KeyedDataNode) =
+          let clonelist (kdlist: KeyedDataNode list) =
+            List.map shallowcopy kdlist
+          let keys = kdnode.nodes.Keys |> List.ofSeq
+          let clonedict = new Dictionary<_,_> (keys.Length)
+          for key in keys
+           do clonedict.Add (key, clonelist kdnode.nodes.[key])
+          { values = new SortedList<_,_> (kdnode.values)
+            nodes = new SortedList<_,_> (clonedict) }
+        shallowcopy node
   

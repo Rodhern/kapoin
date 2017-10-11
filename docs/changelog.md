@@ -1,5 +1,8 @@
 ﻿# Kapoin changelog
 
+### Version 0.1.1.1
+* Compile for KSP ver. 1.3.1.
+
 ### Version 0.1.0.4
 * Add example contract 'Supersonic simulation' (C350).
 * Do not clear persisted node data on 'soft reset'.

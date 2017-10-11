@@ -31,7 +31,7 @@ The contents of the Kapoin ZIP or RAR archive has to be extracted before KSP is 
  (2) Open or extract the Kapoin ZIP or RAR archive and locate the "Rodhern" folder; it is inside the GameData folder in the archive.
  (3) Extract or copy the "Rodhern" folder found in the ZIP or RAR archive to the KSP GameData folder on your computer.
 
-The newly added folder end up with a path like e.g. "C:\Program Files\Steam\steamapps\common\Kerbal Space Program\GameData\Rodhern\", and that is it. Feature-wise the Kapoin add-on is currently (ver. 0.1.0.4) 'mostly empty'. Apart from a few simple Kapoin contract examples, you should not notice much of a difference to KSP when launching with Kapoin installed. Please report if you notice Kapoin causing error messages.
+The newly added folder end up with a path like e.g. "C:\Program Files\Steam\steamapps\common\Kerbal Space Program\GameData\Rodhern\", and that is it. Feature-wise the Kapoin add-on is currently (ver. 0.1.1.1) 'mostly empty'. Apart from a few simple Kapoin contract examples, you should not notice much of a difference to KSP when launching with Kapoin installed. Please report if you notice Kapoin causing error messages.
 
 Kapoin includes optional tweaks to the technology tree in a Module Manager configuration patch. The configuration patch is NOT active by default. If you have already made changes to the technology tree, you probably want to ignore the Kapoin tweaks to the tech tree. If, however, you are using the stock tech tree, you may like to have the configuration patch with the tweaks enabled. To enable the configuration patch rename the "KapoinTechTree.cfg.txt" file in the "\GameData\Rodhern\ConfigData\" folder to remove the .txt ending (i.e. the new name of the file is "KapoinTechTree.cfg").
 

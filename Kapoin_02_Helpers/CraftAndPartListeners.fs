@@ -85,6 +85,18 @@ namespace Rodhern.Kapoin.Helpers.FlightModules
   /// The listener object is a relative to the keyed data and logger node.
   /// Listener objects are owned by part modules (PartModule descendants) and
   /// vessel modules (VesselModule descendants).
+  ///
+  /// The parent may implement IFilteredListenerData by forwarding to the
+  /// interface of the listener object.
+  /// 
+  /// In the PartModule or VesselModule descendant include a Listener and hook
+  /// up the part or vessel module methods by forwarding them to the Listener.
+  ///
+  /// Remark: Only create a VesselModule descendant in the main assembly,
+  ///  because as soon as KSP discovers a VesselModule descendant the class is
+  ///  used for 'all' vessels (including unloaded asteroids).
+  /// 
+  /// Remark: The listener does the same thing for PartModule as for VesselModule.
   type Listener< 'T when 'T :> MonoBehaviour and 'T :> IFilteredListenerData > () =
     
     /// Data and trace logger for listener's parent module.
@@ -110,5 +122,72 @@ namespace Rodhern.Kapoin.Helpers.FlightModules
     /// Access to keyed data.
     member public listener.FilteredData = data.KeyedData
     
-    // TODO - implement .Initialize et cetera
+    /// Initialize listener data and trace logger.
+    /// The parent reference is passed so that it may later be registered
+    /// in cache using the listener data uid as its cache key.
+    /// The isRunning method should determine if Kapoin is running or not.
+    /// You do not have to pass a set of persisted keys,
+    /// but it may improve performance to create a (class) static set.
+    /// Remark: Initialize the listener as early as possible; the embedded
+    ///  trace and debug logger discards all messages until initialized.
+    member public listener.Initialize (parentmodule: 'T, isRunning: unit -> bool, ?persistedkeys: Set<string>) =
+      let persistedkeys = match persistedkeys with Some keys -> keys | None -> Listener<'T>.KSPFieldNames () // avoid defaultArg
+      parent <- Some parentmodule
+      runpredicate <- new Predicate<unit> (isRunning)
+      data.Initialize (typeof<'T>, persistedkeys)
+    
+    /// Uninitialize will unregister the parent from cache (if previously
+    /// registered) and let go of the explicit parent reference.
+    /// The data and logger node is not affected and can still be used
+    /// after the listener object has been uninitialized.
+    member public listener.Uninitialize () =
+      if cached then listener.Unregister ()
+      parent <- None
+      runpredicate <- null
+    
+    /// Register the parent module in the cache.
+    /// Typically invoked when parent module is enabled.
+    member public listener.Register () =
+      if (not cached) && (parent.IsSome) && (KapoinCache.Ready) then
+        let cacheinstance = KapoinCache.GetInstance ()
+        let running = if assigned runpredicate
+                       then runpredicate.Invoke ()
+                       else false
+        if running then
+          cacheinstance.AddRef (parent.Value, listener.Uid.ToString ())
+          cached <- true
+    
+    /// Unregister the parent module (i.e. remove it from cache).
+    /// Typically invoked when parent module is disabled.
+    member public listener.Unregister () =
+      if (cached) && (KapoinCache.Ready) then
+        let cacheinstance = KapoinCache.GetInstance ()
+        cacheinstance.RemoveRef<'T> (listener.Uid.ToString ())
+        cached <- false
+    
+    /// To be used in parent module's OnLoad .
+    member public listener.OnLoad (node: ConfigNode) =
+      data.OnLoad node
+    
+    /// To be used in parent module's OnSave .
+    member public listener.OnSave (node: ConfigNode) =
+      data.OnSave node
+    
+    /// Use reflection (on 'T) and return a set of the names
+    /// of the fields marked with a 'KSPField' attribute.
+    static member public KSPFieldNames () =
+      let isKSPField (info: FieldInfo) =
+        let attribs = info.GetCustomAttributes (typeof<KSPField>, false)
+        attribs.Length > 0
+      typeof<'T>.GetFields ()
+      |> Array.filter isKSPField
+      |> Array.map (fun info -> info.Name)
+      |> Set.ofArray
+    
+    // Implemented here so that it is easy for the parent to get at
+    // an IFilteredListenerData implementation.
+    interface IFilteredListenerData with
+      member listener.Uid = listener.Uid
+      member listener.FilteredData = listener.FilteredData
+      member listener.LogFn = listener.LogFn
   
